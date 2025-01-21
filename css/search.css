@@ -1,0 +1,75 @@
+
+
+.number-input {
+    display: flex;
+    align-items: center;
+    width: 150px;
+}
+
+.number-input button {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.number-input button:active {
+    background-color: #005f7a;
+}
+
+.number-input input[type="number"] {
+    width: 50%;
+    text-align: center;
+    font-size: 18px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin: 0 5px;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearnace: textfield;
+    appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.guest-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px;
+}
+
+.group-setting {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    gap: 1rem;
+}
+
+#guestMenuDropdown {
+    width: 300px;
+    background-color: white !important;
+    /* display: block; */
+    left: 0;
+    position: absolute;
+    z-index: 1000;
+}
+
+@media (max-width: 1000px) {
+    #guestMenuDropdown {
+        left: 0;
+    }
+}

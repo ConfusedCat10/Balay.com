@@ -1,0 +1,76 @@
+
+
+.login-form {
+    flex: 1;
+    background-color: maroon;
+    padding: 30px;
+    border-radius: 10px;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 500px;
+}
+
+.login-form h2 {
+    margin-bottom: 20px;
+}
+
+.login-form input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.login-form button, .login-form a:not(.normal-link) {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: white;
+    color: maroon;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bolder;
+}
+
+.login-form button:hover, .login-form a:not(.normal-link):hover {
+    background-color: gold;
+    color: maroon;
+}
+
+.login-form .facebook-btn {
+    background-color: #3b5998;
+    color: white;
+}
+
+.login-form .google-btn {
+    background-color: #db4437;
+    color: white;
+}
+
+.login-form .apple-btn {
+    background-color: black;
+    color: white;
+}
+
+.login-form .link {
+    background: none;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.login-form .link .span {
+    text-decoration: underline;
+}
+
+.login-form .link:hover {
+    color: black;
+}

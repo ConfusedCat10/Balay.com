@@ -1,0 +1,141 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(to right, maroon, gold);
+    color: white;
+    position: fixed;
+    width: 100%;
+}
+
+/* Site title container */
+.site-title-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    cursor: pointer;
+}
+
+/* Site title in header */
+.site-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-left: 25px;
+    margin-top: 8px;
+}
+
+.site-title:hover {
+    text-decoration: underline;
+}
+
+.site-logo img {
+    width: 200px;
+    border-radius: 10px;
+}
+
+/* Language select box */
+.language-select {
+    position: relative;
+    font-size: 16px;
+}
+
+/* Select box with flags */
+.language-select select {
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    background-color: white;
+    color: maroon;
+    font-size: 16px;
+}
+
+.language-select select option {
+    padding: 8px;
+    background-repeat: no-repeat;
+    background-position: left;
+}
+
+/* Question mark icon (About) */
+.about-icon {
+    color: maroon;
+    border-radius: 50%;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    position: relative;
+}
+
+/* Tooltip */
+.tooltip {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    top: 125%;
+    left: 25%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+.tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent black transparent;
+}
+
+/* Show tooltip on hover */
+.about-icon:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    background: url('/bookingapp/assets/images/msu-facade.jpg');
+    background-size: cover;
+    background-position: center;
+    flex-direction: row;
+    background: linear-gradient(to bottom right, maroon, white, gold);
+    justify-content: center;
+}
+
+.content {
+    display: flex;
+    /* flex: 1; */
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    gap: 40px;
+}
+
+.content-left {
+    flex: 1;
+    color: black;
+    padding: 10px;
+    margin-right: 40px;
+}
+
+.content-left h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.content-left p {
+    font-size: 18px;
+    max-width: 800px;
+}
