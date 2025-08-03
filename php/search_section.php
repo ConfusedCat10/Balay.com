@@ -1,17 +1,17 @@
 <!-- Search section -->
-<section class="section-container booking-container">
-    <form method="get" action="/bookingapp/search_result.php" class="booking-form">
+<section class="section-container booking-container booking-form">
+    <!-- <form method="get" action="/bookingapp/search_result.php" class="booking-form"> -->
         <input type="hidden" name="filter" value="true">
         <div class="input-group" style="width: 100%; justify-content: center">
             <span><i class="fa-solid fa-building"></i></span>
             <div class="dropdown" style="width: 50%;">
                 <label for="">Search dormitories and cottages</label>
-                <input type="text" name="search" id="" placeholder="Search establishment" value="<?php echo isset($_GET['search']) ? $_GET['search'] : '' ?>" style="width: 80%; max-width: 500px">
+                <input type="text" name="search" id="searchInput" placeholder="Search establishment" oninput="searchEstablishments()" style="width: 80%; max-width: 500px">
             </div>
-            <button class="btn btn-primary" style="background-color: maroon; color: white" onclick="redirect('/bookingapp/search_result.php')"><i class="fa-solid fa-magnifying-glass"></i> SEARCH</button>
+            <!-- <button class="btn btn-primary" style="background-color: maroon; color: white" onclick="redirect('/bookingapp/search_result.php')"><i class="fa-solid fa-magnifying-glass"></i> SEARCH</button> -->
 
         </div>
-    </form>
+    <!-- </form> -->
    </section>
    <!-- End of search section -->
    

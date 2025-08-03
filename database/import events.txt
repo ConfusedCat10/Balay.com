@@ -1,0 +1,13 @@
+CREATE DEFINER=`root`@`localhost` EVENT `auto_cancel_reservation` ON SCHEDULE EVERY 1 SECOND STARTS '2025-01-30 08:37:21' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+    UPDATE residency
+    SET Status = 'cancelled', Remark = 'Owner failed to confirm reservation'
+    WHERE DateOfEntry > CURDATE() AND Status = 'pending';
+END
+
+CREATE DEFINER=`root`@`localhost` EVENT `delete_expired_otps` ON SCHEDULE EVERY 3 MINUTE STARTS '2024-12-08 23:15:37' ON COMPLETION NOT PRESERVE ENABLE DO delete from otp_verifications where expiry_time < now()
+
+CREATE DEFINER=`root`@`localhost` EVENT `update_residency_status` ON SCHEDULE EVERY 1 SECOND STARTS '2025-01-29 11:26:07' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+    UPDATE residency 
+    SET Status = 'currently residing', Remark = 'Residency has started' 
+    WHERE DateOfEntry >= CURDATE() AND Status = 'confirmed';
+END

@@ -65,7 +65,7 @@ function generateStars($rating) {
 
 // Replace bad words with asterisks
 function censorBadWords($string) {
-    $badWords = ['shit', 'fuck', 'damn', 'whore', 'asshole', 'dick', 'pussy'];
+    $badWords = ['shit', 'fuck', 'hell','damn', 'asshole', 'fag',];
     foreach ($badWords as $word) {
         $censoredWord = str_repeat('*', strlen($word));
         $string = str_ireplace($word, $censoredWord, $string);
@@ -894,7 +894,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
             text-overflow: ellipsis;
         }
 
-        .expanded. .review-content {
+        .expanded.   .review-content {
             display: block;
             -webkit-line-clamp: unset;
         }
@@ -1162,6 +1162,10 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
             height: 317px !important;
         }
 
+        .booking-form {
+            margin-top: 61px !important;
+        }
+
         @media (max-width: 1000px) {
             .acc-row {
                 display: block;
@@ -1217,7 +1221,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
     <header class="header">
         <?php include "../php/header.php"; ?>        
         <!-- Search section -->
-        <?php include "../php/search_section.php"; ?>
+        <?php  include "../php/search_section.php"; ?>
     </header>
 
 
@@ -1268,7 +1272,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
 
     $locationDetails = getLocationDetails($latitude, $longitude);
 
-    $locationDescription = "Location details are not available.";
+    $locationDescription = "";
     $address = array();
     if (!empty($locationDetails)) {
         $address = $locationDetails['address'] ?? [];
@@ -1304,8 +1308,8 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                     <p class="section-subheader" style="text-transform: uppercase"><?php echo $establishment['Type']; ?></p>
                     <h2 class="section-header"><?php echo $establishment['Name']; ?></h2>
                     <p style="font-size: 14px;">
-                        <i class="fa-solid fa-location-pin"></i> <span id="est-address">
-                        </span> (<a style="color: blue; cursor: pointer" onclick="openModal('viewMapModal');">Show map</a>) <br>
+                        <i class="fa-solid fa-location-pin"></i> <span id="address"><?php echo $establishment['Address']; ?>
+                        </span> (<a style="color: blue; cursor: pointer" onclick="redirect('#map-preview')">Show map</a>) <br>
                         <i class="fa-solid fa-venus-mars"></i> <?php echo $establishment['GenderInclusiveness'] ?> &middot;
                         <i class="fa-solid fa-stairs"></i>
                         <?php  echo $establishment['NoOfFloors'] . ' floors'; ?>
@@ -1313,9 +1317,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                 </div>
                 <?php if (!$isUserOwner) { ?>
                     <div class="accommodation-header-btn-group">
-                        <!-- <button type="button" class="btn special-btn" title="Add to favorites"><i class="fa-solid fa-heart"></i></button> -->
-                        <!-- <button type="button" class="btn special-btn" title="Share"><i class="fa-solid fa-share-nodes"></i></button> -->
-                        <!-- <button class="btn" onclick="openModal('viewMapModal');"><i class="fa-solid fa-location-pin"></i> See on Map</button> -->
+                        <button class="btn" onclick="redirect('#map-preview');"><i class="fa-solid fa-location-pin"></i> See on Map</button>
                     </div>
                 <?php } else { ?>
                     <div class="accommodation-header-btn-group">
@@ -1452,37 +1454,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
 
                     
 
-                    <!-- Amenities -->
-                    <div class="container-section" id="amenities" style="width: 100%; border: none;">
-                        <?php if ($isUserOwner) { ?>
-                                <button class="btn btn-primary" id="add-feature" onclick="openModal('addEstablishmentAmenityModal')" style="float: right; margin-left: 10px;"><i class="fa-solid fa-plus"></i> Manage amenities</button>
-                            <?php } ?>
-                        <div class="section-head">
-                            <div class="head-title">
-                                <h2>Amenities</h2>
-                                <p>Most popular features and facilities</p>
-                            </div>
-                        </div>
-
-                        <?php
-                        $sql = "SELECT f.Name, f.Icon FROM establishment_features e INNER JOIN features f ON f.FeatureID = e.FeatureID WHERE EstablishmentID = $estID ORDER BY f.Icon";
-                        $result = mysqli_query($conn, $sql);
-
-                        ?>
-
-                        <div class="chip-group clearfix">
-                            <?php
-                            if (mysqli_num_rows($result) > 0) {
-                                while ($row = mysqli_fetch_assoc($result)) { ?>
-                            <span class="chip">
-                                <i class="fa-solid fa-<?php echo $row['Icon']; ?>"></i> <?php echo $row['Name']; ?>
-                            </span>                
-                            <?php }
-                            } else {
-                                echo "<h3>No amenities featured yet.</h3>";
-                            } ?>
-                        </div>
-                    </div>
+                    
                 </div>
 
                 <div class="sidebar">
@@ -1700,6 +1672,38 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
             </div>
         </div>
 
+        <!-- Amenities -->
+        <div class="container-section" id="amenities" style="width: 100%; border: none;">
+            <?php if ($isUserOwner) { ?>
+                    <button class="btn btn-primary" id="add-feature" onclick="openModal('addEstablishmentAmenityModal')" style="float: right; margin-left: 10px;"><i class="fa-solid fa-plus"></i> Manage amenities</button>
+                <?php } ?>
+            <div class="section-head">
+                <div class="head-title">
+                    <h2>Amenities</h2>
+                    <p>Most popular features and facilities</p>
+                </div>
+            </div>
+
+            <?php
+            $sql = "SELECT f.Name, f.Icon FROM establishment_features e INNER JOIN features f ON f.FeatureID = e.FeatureID WHERE EstablishmentID = $estID ORDER BY f.Icon";
+            $result = mysqli_query($conn, $sql);
+
+            ?>
+
+            <div class="chip-group clearfix">
+                <?php
+                if (mysqli_num_rows($result) > 0) {
+                    while ($row = mysqli_fetch_assoc($result)) { ?>
+                <span class="chip">
+                    <i class="fa-solid fa-<?php echo $row['Icon']; ?>"></i> <?php echo $row['Name']; ?>
+                </span>                
+                <?php }
+                } else {
+                    echo "<h3>No amenities featured yet.</h3>";
+                } ?>
+            </div>
+        </div>
+
         <!-- Availability and Prices -->
         <div class="container-section clearfix" id="availability">            
             
@@ -1792,7 +1796,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                     // Check if user is tenant of this room
                     $isUserRoomTenant = false;
                     $tenancy = array();
-                    $tenantSql = "SELECT rs.ResidencyID, rs.DateOfEntry, rs.DateOfExit, rs.Status, rs.CreatedAt, r.RoomID FROM residency rs INNER JOIN rooms r ON r.RoomID = rs.RoomID WHERE rs.TenantID = $tenantID AND r.RoomID = $roomID";
+                    $tenantSql = "SELECT rs.ResidencyID, rs.DateOfEntry, rs.DateOfExit, rs.Status, rs.CreatedAt, r.RoomID FROM residency rs INNER JOIN rooms r ON r.RoomID = rs.RoomID WHERE rs.TenantID = $tenantID AND r.RoomID = $roomID AND rs.Status = 'currently residing'";
                     $tenantResult = mysqli_query($conn, $tenantSql);
 
                     echo mysqli_error($conn);
@@ -1823,7 +1827,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                             <span class="room-availability" style="font-size: 14px;">
                                 <?php
                                 
-                                $residencySql = "SELECT COUNT(rs.ResidencyID) AS NoOfTenants FROM residency rs WHERE rs.RoomID = $roomID AND rs.Status != 'deleted'";
+                                $residencySql = "SELECT COUNT(rs.ResidencyID) AS NoOfTenants FROM residency rs WHERE rs.RoomID = $roomID AND rs.Status = 'currently residing'";
                                 $residencyResult = mysqli_query($conn, $residencySql);
 
                                 $residents = 0;
@@ -1932,7 +1936,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                                     // $noSpaceAvailable = true;
                                     if ($availability === 'Available' && !$noSpaceAvailable && !$isUserRoomTenant) {
                                          ?>
-                                        <button class="book-now-btn btn" onclick="bookRoom('<?php echo $roomID; ?>', '<?php echo $paymentRate; ?>', '<?php echo $roomName; ?>', '<?php echo $establishment['Name']; ?>')" style="margin-top: 10px; position: absolute; right: 1rem; bottom: 1rem;">Book Now</button>
+                                        <button class="book-now-btn btn" onclick="bookRoom('<?php echo $roomID; ?>', '<?php echo $paymentRate; ?>', '<?php echo $roomName; ?>', '<?php echo $establishment['Name']; ?>', '<?php echo $userPerson['Gender']; ?>', '<?php echo $genderInclusiveness; ?>')" style="margin-top: 10px; position: absolute; right: 1rem; bottom: 1rem;">Book Now</button>
                                     <?php 
                                     }
                                     
@@ -1989,8 +1993,12 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
 
             <div id="houseRules" style="margin-top: 20px; font-size: 20px">
                 <?php
-                    if (!empty($establishment['HouseRules'])) {
-                        echo "<p>" . str_replace("\\r\\n", "<br>", $establishment['HouseRules']) . "</p>";
+                    $houseRules = $establishment['HouseRules'];
+                    $houseRules = str_replace("\\r\\n", "<br>", $houseRules);
+                    $houseRules = str_replace("\\'", "'", $houseRules);
+                    $houseRules = str_replace("\\\"", "\"", $houseRules);
+                    if (!empty($houseRules)) {
+                        echo "<div>$houseRules</div>";
                     } else {
                         echo "<h3 style='text-align: center'>No house rules yet!</h3>";
                     }
@@ -2067,7 +2075,8 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
 
                         $residencyID = $row['ResidencyID'];
 
-                        if (!empty($middleName)) {
+                        $thisMiddleInitials = "";
+                        if (!empty($thisMiddleName)) {
                             $thisMiddleInitials = $thisMiddleName[0] . '.';
                         }
 
@@ -2083,8 +2092,10 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                         $dateOfEntry = isset($row['DateOfEntry']) ? date('F d, Y', strtotime($row['DateOfEntry'])) : '';
                         $dateOfExit = isset($row['DateOfExit']) ? date('F d, Y', strtotime($row['DateOfExit'])) : '';
 
+                        $thisRoomName = $row['RoomName'];
+
                         // Show default profile picture based on the gender when profile picture is not available
-                        if (empty($thisProfilePicture) || !$thisProfilePicture) {
+                        if (empty($thisProfilePicture) || !$thisProfilePicture || imageExists($thisProfilePicture)) {
                             $thisProfilePicture = "/bookingapp/user/$thisGender-no-face.jpg";
                         }
             ?>
@@ -2094,7 +2105,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                                 <div class="profile-info">
                                     <h3 class="profile-name"><a href="/bookingapp/user/profile.php?id=<?php echo $row['Username']; ?>" style="color: maroon;"><?php echo $thisFullName; ?></a></h3>
                                     <p class="profile-role">
-                                        <?php echo $roomName; ?> <br>
+                                        <?php echo $thisRoomName; ?> <br>
                                         <?php echo date("F d, Y", strtotime($row['DateOfEntry'])); ?>
                                         <?php if (isset($dateOfExit) && !empty($dateOfExit)) {
                                             echo " - " . $dateOfExit;
@@ -2384,6 +2395,9 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
     <?php include "../modal/edit_payment_channel_modal.php"; ?>
 
     <?php include "../modal/toggle_payment_channel_modal.php"; ?>
+
+    <?php include "../modal/confirm_photo_delete.php"; ?>
+
     
     
     <!-- Footer -->
@@ -2431,18 +2445,6 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
             subdomains: ['a', 'b', 'c']
         }).addTo(mapPreview);
 
-        // Establishment data from PHP
-        var establishments = <?php echo json_encode($establishments); ?>;
-
-        // Add markers to the map
-        establishments.forEach(function(establishment) {
-            var encryptedEstID = btoa(establishment.EstablishmentID);
-            if (establishment.Latitude && establishment.Longitude) {
-                L.marker([establishment.Latitude, establishment.Longitude])
-                    .addTo(mapPreview)
-                    .bindPopup(`<a href="/bookingapp/establishment/establishment.php?est=${encryptedEstID}">${establishment.Name}</a>`);
-            }
-        });
 
         // Add a marker if latitude and longitude exist
         if (latitude && longitude) {
@@ -2460,7 +2462,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
             document.getElementById('longitude').value = longitude;
 
             // Get address
-            getEstablishmentAddress(parseFloat(latitude), parseFloat(longitude));
+            // getEstablishmentAddress(parseFloat(latitude), parseFloat(longitude));
 
         } else {
             console.log("No saved location found. Defaulting to MSU Main Campus");
@@ -2731,6 +2733,10 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
             }
         }
 
+        function changeFileButtonText(fileInput) {
+            const thisFileInput = document.getElementById(fileInput);
+        }
+
         function toggleAmenity(amenityID, chip, estID, scope) {
             const action = chip.classList.contains('added') ? 'remove' : 'add';
 
@@ -2828,8 +2834,15 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
             .catch(error => console.error('Error:', error));
         }
 
+        function confirmPhotoDeletion(photoIndex) {
+            openModal('confirmPhotoDeleteModal');
+            document.getElementById('confirm-modal-title').textContent = "Delete Photo " + photoIndex;
+            document.getElementById('photo-index').value = photoIndex;
+        }
+
         // Upload photo via AJAX
-        function deletePhoto(photoIndex) {
+        function deletePhoto() {
+            const photoIndex = document.getElementById('photo-index').value;
             const inputId = `photo-input-${photoIndex}`;
             const descriptionId = `photo-description-${photoIndex}`;
             // const fileInput = document.getElementById(inputId);
@@ -2869,7 +2882,7 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                 document.getElementById(inputID).setAttribute(limit, date);
             }
             
-            function bookRoom(roomID, price, roomName, estName) {
+            function bookRoom(roomID, price, roomName, estName, tenantGender, roomGender) {
                 openModal('bookRoomModal');
                 document.getElementById('book-room-id').value = roomID;
                 document.getElementById('book-room-name').value = roomName;
@@ -2880,6 +2893,24 @@ function toggleReservation($conn, $residencyID, $action, $estID) {
                 }).format(price);
                 document.getElementById('book-payment-price').value = price;
                 document.getElementById('book-date').setAttribute('min', now);
+
+                var genderApplicable = false;
+
+                if (tenantGender === "Male" && (roomGender === "Males only" || roomGender === "Co-ed")) {
+                    genderApplicable = true;
+                } else if (tenantGender === "Female" && (roomGender === "Females only" || roomGender === "Co-ed")) {
+                    genderApplicable = true;
+                } else {
+                    genderApplicable = false;
+                }
+
+                if (!genderApplicable) {
+                    document.getElementById("book-now-btn").hidden = true;
+                    document.getElementById("warning-element").hidden = false;
+                } else {
+                    document.getElementById("book-now-btn").hidden = false;
+                    document.getElementById("warning-element").hidden = true;
+                }
             }
 
             // Toogle Payment Channels

@@ -27,6 +27,9 @@
                             <option value="Double occupancy">Double occupancy</option>
                             <option value="Triple occupancy">Triple occupancy</option>
                             <option value="Quad occupancy">Quad occupancy</option>
+                            <option value="Five-person occupancy">Five-person occupancy</option>
+                            <option value="Six-person occupancy">Six-person occupancy</option>
+                            <option value="Ten-person occupancy">Ten-person occupancy</option>
                             <option value="Suite">Suite</option>
                             <option value="Suite double">Suite double</option>
                             <option value="Suite triple">Suite triple</option>

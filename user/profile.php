@@ -113,6 +113,10 @@ if ($thisRole === "owner") {
 $result = mysqli_query($conn, $sql);
 $rowCount = mysqli_num_rows($result);
 
+$thisInstitution = "";
+$thisPositionTitle = "";
+$thisUniversityID = "";
+
 if ($rowCount > 0) {
     $roleRow = mysqli_fetch_assoc($result);
 
@@ -167,67 +171,92 @@ if (isset($_POST['submitGeneral'])) {
 
 
     $oldPhoto  = $thisProfilePicture;
-    $profilePicture = $_FILES['fileInput']['name']; // The current profile picture path
-
-    echo "Old Photo: $oldPhoto | Uploaded Photo: $profilePicture";
+    $profilePicture = $_FILES['fileInput']; // The current profile picture path
 
     $newFilePath = "";
 
     try {
+
+       // Validation and Upload Settings
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        $allowedTenantDomains = ['gmail.com', 's.msumain.edu.ph', 'msumain.edu.ph'];
+        $maxFileSize = 5242880; // 5MB
+
+        // Input Validation
         if (empty($firstName) || empty($lastName) || empty($username) || empty($emailAddress)) {
-            throw new Exception('Please complete all the fields.');
+            throw new Exception('Please complete all fields.');
         }
 
         if (!filter_var($emailAddress, FILTER_VALIDATE_EMAIL)) {
             throw new Exception('Invalid email format.');
         }
 
-        // Check if there is a change in the email address
+        // Tenant Email Domain Validation
         if ($profileAccount['EmailAddress'] !== $emailAddress) {
-            $allowedTenantDomains = ['gmail.com', 's.msumain.edu.ph', 'msumain.edu.ph'];
-            $emailDomain = substr(strchr($emailAddress, "@"), 1); // Extract domain from email
-
+            $emailDomain = substr(strchr($emailAddress, "@"), 1);
             if ($role === "tenant" && !in_array($emailDomain, $allowedTenantDomains)) {
-                throw new Exception('Unacceptable email domain for tenants. It must be either gmail.com, s.msumain.edu.ph, or msumain.edu.ph.');
+                throw new Exception('Unacceptable email domain for tenants. Must be: ' . implode(', ', $allowedTenantDomains));
             }
         }
 
-        // Photo
-        $allowedExtensions = ["jpg", "jpeg", "png", "gif"];
-        $fileExtension = strtolower(pathinfo($profilePicture, PATHINFO_EXTENSION));
+        // Profile Picture Validation
+        if ($profilePicture['error'] !== 0) {
+            $uploadErrors = [
+                1 => 'Photo file exceeds upload_max_filesize.',
+                2 => 'Photo file exceeds MAX_FILE_SIZE.',
+                3 => 'Photo file uploaded partially.',
+                4 => 'No photo file uploaded.',
+                6 => 'Temporary folder missing.',
+                7 => 'Failed to write file to disk.',
+                8 => 'PHP extension stopped file upload.',
+            ];
+            throw new Exception($uploadErrors[$profilePicture['error']]);
+        }
 
-        $timestamp = date("mdYHi");
+        $fileExtension = strtolower(pathinfo($profilePicture['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            throw new Exception("Invalid file type. Only " . implode(', ', $allowedExtensions) . " are accepted.");
+        }
 
-        $fileName = $username . '_' . $timestamp . '.' . $fileExtension;
+        if (!getimagesize($profilePicture['tmp_name'])) {
+            throw new Exception("The file uploaded is not an image type.");
+        }
 
-        $newFilePath = "/bookingapp/user/profile-pictures/" . $fileName;
+        if ($profilePicture['size'] > $maxFileSize) {
+            throw new Exception("Photo file is too large (5MB limit).");
+        }
 
-        echo "New file path: $newFilePath";
+       
 
-        $tempName = $_FILES['fileInput']['tmp_name'];
-        $size = $_FILES['fileInput']['size'];
-        $photoError = $_FILES['fileInput']['error'];
+        // Upload Profile Picture
+        $fileName = $username . '_' . date("mdYHi") . '.' . $fileExtension;
+        $target = "profile-pictures/" . $fileName;
+        $databaseTarget = "/bookingapp/user/profile-pictures/" . $fileName;
 
-        if ($photoError === 0) {
-            if (!in_array($fileExtension, $allowedExtensions)) {
-                throw new Exception("Invalid file type for the photo. Only JPG, JPEG, PNG, and GIF are accepted.");
+        echo "Old Photo: $oldPhoto | Uploaded Photo: " . $profilePicture['name'] . "<br>";
+        echo "Old Photo: $oldPhoto | Uploaded Photo: " . $profilePicture['name'] . "<br>";
+        echo "Target: $oldPhoto | Database Target: $databaseTarget";
+
+        try {
+            // Check if file is uploaded
+            if (!is_uploaded_file($profilePicture['tmp_name'])) {
+                throw new Exception('File not uploaded.');
             }
-    
-            if (!getimagesize($tempName)) {
-                throw new Exception("The file uploaded is not an image type.");
-            }
-    
-            if ($size > 5242880) {
-                throw new Exception("Photo file is too large. The file size should be lower than 5 MB.");
-            }
 
+            // Delete old photo
             if (file_exists($oldPhoto)) {
                 unlink($oldPhoto);
             }
-    
-            if (!move_uploaded_file($tempName, $newFilePath)) {
-                throw new Exception("Sorry, there's something wrong in uploading the photo.");
+
+            // Move uploaded file
+            if (!move_uploaded_file($profilePicture['tmp_name'], $target)) {
+                throw new Exception('Error uploading file.');
             }
+
+            echo "File uploaded successfully.";
+        } catch (Exception $e) {
+            echo "Error: " . $e->getMessage();
+            // Log error or display error message
         }
 
         // Update user account
@@ -314,7 +343,7 @@ if (isset($_POST['submitGeneral'])) {
                 throw new Exception("Prepared statement error: " . mysqli_error($conn));
             }
 
-            mysqli_stmt_bind_param($stmt, "si", $newFilePath, $thisPersonID);
+            mysqli_stmt_bind_param($stmt, "si", $databaseTarget, $thisPersonID);
 
             if (!mysqli_stmt_execute($stmt)) {
                 throw new Exception("Statement execution error: " . mysqli_stmt_error($stmt));
@@ -326,7 +355,7 @@ if (isset($_POST['submitGeneral'])) {
         $thisProfilePicture = $newFilePath;
         $generalPromptError = "";
         sleep(5);
-        // header("Location: profile.php?id=$username");
+        header("Location: profile.php?id=$username");
 
     } catch (Exception $e) {
         $generalPromptError = "<i class='fa-solid fa-circle-xmark'></i> " . $e->getMessage();
@@ -733,6 +762,8 @@ if (isset($_POST['submitSocial'])) {
             padding: 20px;
         }
 
+        
+
        
         @media (max-width: 1000px) {
             .form-inline input, .form-inline select {
@@ -764,7 +795,7 @@ if (isset($_POST['submitSocial'])) {
                         <a href="#account-change-password" class="list-group-item list-group-item-action" data-toggle="list">Change password</a>
                         <?php } ?>
                         <a href="#account-info" class="list-group-item list-group-item-action" data-toggle="list">Info</a>
-                        <a href="#account-social-links" class="list-group-item list-group-item-action" data-toggle="list">Social links</a>
+                        <!-- <a href="#account-social-links" class="list-group-item list-group-item-action" data-toggle="list">Social links</a> -->
                         <?php if ($isUserProfile) { ?>
                         <a href="#account-connections" class="list-group-item list-group-item-action" data-toggle="list" hidden>Connections</a>
                         <?php } ?>
@@ -772,7 +803,8 @@ if (isset($_POST['submitSocial'])) {
                         <a href="#establishments" class="list-group-item list-group-item-action" data-toggle="list">Owned establishments</a>
                         <?php } ?>
                         <?php if ($thisRole === 'tenant') { ?>
-                        <a href="#residencies" class="list-group-item list-group-item-action" data-toggle="list">Residences</a>
+                        <a href="#residencies" class="list-group-item list-group-item-action" data-toggle="list">Residencies</a>
+                        <a href="#residency_history" class="list-group-item list-group-item-action" data-toggle="list">Residency history</a>
                         <?php } ?>
                     </div>
                 </div>
@@ -1327,6 +1359,15 @@ if (isset($_POST['submitSocial'])) {
                             </div>
                         </div>
 
+                        <div class="tab-pane fade" id="residency_history">
+                            <div class="tab-content">
+
+                            <h3>Residency history</h3>
+                            <?php echo "<p>Showing $currentResidencyCount result(s).</p>"; ?>
+                                
+                            </div>
+                        </div>
+
                         <?php } ?>
                     </div>
                 </div>
@@ -1592,6 +1633,8 @@ if (isset($_POST['submitSocial'])) {
             }, 3000);
         }
 
+        <?php if ($isUserProfile) { ?>
+
         document.getElementById("fileInput").addEventListener("change", function() {
             const fileInput = document.getElementById("fileInput");
             const imagePreview = document.getElementById("profile-picture-preview");
@@ -1609,6 +1652,8 @@ if (isset($_POST['submitSocial'])) {
                 resetPicture();
             }
         });
+
+        <?php } ?>
 
         // Toast notification functionalities
         let toastBox = document.getElementById("toastBox");

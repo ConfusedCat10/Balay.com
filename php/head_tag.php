@@ -63,10 +63,11 @@ if (isset($_SESSION['userID'])) {
         $religion = $row['Religion'];
 
         $profilePicture = $row['ProfilePicture'];
-        
-        if (empty($profilePicture)) {
-            $profilePicture = "/bookingapp/user/$gender-no-face.jpg";
-        } 
+        $defaultProfilePicture = "/bookingapp/user/$gender-no-face.jpg";
+
+        $profilePicture = isset($profilePicture) ? $profilePicture : $defaultProfilePicture;
+        // $profilePicture = imageExists($profilePicture) ? $profilePicture : $defaultProfilePicture;
+
     }
 
     $isLoggedIn = true;
@@ -96,6 +97,21 @@ if (isset($_SESSION['userID'])) {
 }
 
 // Get role information
+
+function imageExists($imageSrc) {
+    // Check for local file
+    if (file_exists($imageSrc) && is_file($imageSrc)) {
+        return true;
+    }
+
+    // Check for external URL
+    if (filter_var($imageSrc, FILTER_VALIDATE_URL)) {
+        $headers = @get_headers($imageSrc);
+        return $headers && strpos($headers[0], '200 OK') !== false;
+    }
+
+    return false;
+}
 
 ?>
 

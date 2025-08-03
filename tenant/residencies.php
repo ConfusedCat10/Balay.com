@@ -28,6 +28,8 @@ $offset = ($currentPage - 1) * $itemsPerPage;
 
 $tenantID = isset($_SESSION['tenant']) ? $_SESSION['tenant']['TenantID'] : '0';
 
+// echo $tenantID;
+
 // Get total count for pagination
 $countQuery = "SELECT COUNT(*) AS total FROM residency res 
             INNER JOIN tenant t ON t.TenantID = res.TenantID 
@@ -42,7 +44,7 @@ $totalPages = ceil($totalItems / $itemsPerPage);
 $dataQuery = "SELECT res.ResidencyID, r.RoomID, r.RoomName, r.RoomType, e.EstablishmentID,
 e.Name AS EstablishmentName, e.Type AS EstablishmentType,
 ep.Photo1, res.DateOfEntry, res.DateOfExit, res.CreatedAt AS BookingDate,
-res.Status AS ResidencyStatus FROM residency res 
+res.Status AS ResidencyStatus, res.Remark FROM residency res 
 INNER JOIN tenant t ON t.TenantID = res.TenantID 
 INNER JOIN rooms r ON r.RoomID = res.RoomID
 INNER JOIN establishment e ON e.EstablishmentID = r.EstablishmentID
@@ -365,6 +367,9 @@ echo mysqli_error($conn);
                                         $bookingDate = date("F d, Y", strtotime($row['BookingDate']));
 
                                         $residencyStatus = $row['ResidencyStatus'];
+                                        $remark = $row['Remark'];
+
+                                        $referenceNumber = $residencyID . date("miyhis", strtotime($bookingDate)) . date("miyhis", strtotime($dateOfEntry));
                     
                             ?>
                                         <div class="profile-card">  
@@ -389,6 +394,11 @@ echo mysqli_error($conn);
                                                 <p><strong>Residency started on:</strong> <?php echo $dateOfEntry; ?></p>
                                                 <p><strong>Residency ended on:</strong> <?php echo $dateOfExit; ?></p>
                                                 <p><strong>Status:</strong> <?php echo $residencyStatus; ?></p>
+                                                <p><strong>Reference:</strong> <?php echo $referenceNumber; ?></p>
+
+                                                <?php if (!empty($remark)) { ?>
+                                                    <p style="text-align: center; background-color: yellow; color: black; padding: 5px;"><?php echo $remark; ?></p>
+                                                <?php } ?>
 
                                             <div class="profile-actions">
                                                 <form action="update_residency_status.php" method="post">
@@ -439,7 +449,7 @@ echo mysqli_error($conn);
                         
                             
                     
-                        <?php if ($dataResult) { ?>
+                        <?php if ($dataResult && mysqli_num_rows($dataResult) > 0) { ?>
                             <!-- Pagination -->
                             <div id="pagination" class="pagination">
                                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>

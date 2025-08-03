@@ -1,7 +1,7 @@
 <!-- Modal for Password Entry -->
 <div class="modal" id="passwordModal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()" title="Click to close this dialog.">&times;</span>
+            <span class="close" onclick="cancelPasswordInput()" title="Click to close this dialog.">&times;</span>
             <h3 style="color: black">Enter Password</h3>
 
             <!-- Password input with toggle button overlaid -->

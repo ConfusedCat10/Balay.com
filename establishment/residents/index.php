@@ -246,7 +246,8 @@ echo mysqli_error($conn);
         }
 
         .btn-secondary {
-            background-color: #6c757d;
+            background-color: white;
+            color: black
         }
 
         .btn:hover {
@@ -292,6 +293,27 @@ echo mysqli_error($conn);
             padding: 10px;
         }
 
+        .modal-close {
+            text-align: right;
+            font-size: 36px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #FFD700;
+        }
+
+        .modal-header {
+            display: flex;
+            flex-direction: row-reverse;
+        }
+
+        .modal-footer {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+
         @media (max-width: 1000px) {
             .form-inline input, .form-inline select {
                 width: 100% !important;
@@ -327,7 +349,7 @@ echo mysqli_error($conn);
 
         // echo $ownerID;
 
-        echo mysqli_num_rows($estResult);
+        // echo mysqli_num_rows($estResult);    
 
     ?>
 
@@ -374,7 +396,7 @@ echo mysqli_error($conn);
                             <?php 
                             if ($tab === 'all') {
                                 $tenants = array();
-                                $tenantSql = "SELECT p.ProfilePicture, p.FirstName, p.MiddleName, p.LastName, p.ExtName, p.Gender, u.Username, t.UniversityID, rs.ResidencyID, rs.DateOfEntry, rs.UpdateAt AS LastUpdate, rs.DateOfExit, rs.Status AS ResidencyStatus, r.RoomName, r.RoomType, rs.CreatedAt AS BookingDate, e.Name AS EstablishmentName FROM residency rs INNER JOIN tenant t ON t.TenantID = rs.TenantID INNER JOIN rooms r ON r.RoomID = rs.RoomID INNER JOIN user_account u ON u.UserID = t.UserID INNER JOIN person p ON p.PersonID = u.PersonID INNER JOIN establishment e ON e.EstablishmentID = r.EstablishmentID WHERE e.OwnerID = $ownerID AND rs.Status = '$res_st' $searchFilter ORDER BY p.LastName, p.FirstName, p.ExtName, p.MiddleName";
+                                $tenantSql = "SELECT p.ProfilePicture, p.FirstName, p.MiddleName, p.LastName, p.ExtName, p.Gender, u.Username, t.UniversityID, rs.ResidencyID, rs.DateOfEntry, rs.UpdateAt AS LastUpdate, rs.DateOfExit, rs.Status AS ResidencyStatus, r.RoomName, r.RoomType, rs.CreatedAt AS BookingDate, e.Name AS EstablishmentName, rs.Remark FROM residency rs INNER JOIN tenant t ON t.TenantID = rs.TenantID INNER JOIN rooms r ON r.RoomID = rs.RoomID INNER JOIN user_account u ON u.UserID = t.UserID INNER JOIN person p ON p.PersonID = u.PersonID INNER JOIN establishment e ON e.EstablishmentID = r.EstablishmentID WHERE e.OwnerID = $ownerID AND rs.Status = '$res_st' $searchFilter ORDER BY p.LastName, p.FirstName, p.ExtName, p.MiddleName";
                                 $tenantResult = mysqli_query($conn, $tenantSql);
                                 
                                 if (mysqli_num_rows($tenantResult) > 0) {
@@ -388,7 +410,7 @@ echo mysqli_error($conn);
                                     $profilePicture = $tenants['ProfilePicture'] ?? "/bookingapp/user/$gender-no-face.jpg";
 
                                     $firstName = $tenants['FirstName'] ?? '';
-                                    $middleName = isset($tenants['MiddleName']) ? $tenants['MiddleName'][0] . '.' : '';
+                                    $middleName = isset($tenants['MiddleName']) ? $tenants['MiddleName']     : '';
                                     $lastName = $tenants['LastName'] ?? '';
                                     $extName = $tenants['ExtName'] ?? '';
 
@@ -404,6 +426,9 @@ echo mysqli_error($conn);
 
                                     $residencyID = $tenants['ResidencyID'];
                                     $residencyStatus = $tenants['ResidencyStatus'];
+                                    $remark = $tenants['Remark'];
+
+                                    $remark = str_replace("\'", "'", $remark);
 
                                     $dateOfEntry = $tenants['DateOfEntry'];
                                     $bookingDate = $tenants['BookingDate'];
@@ -422,6 +447,9 @@ echo mysqli_error($conn);
 
                                     $roomName = $tenants['RoomName'];
                                     $roomType = $tenants['RoomType'];
+
+                                    $referenceNumber = $residencyID . date("miyhis", strtotime($bookingDate)) . date("miyhis", strtotime($dateOfEntry));
+
                             ?>
 
                                 <div class="profile-card">  
@@ -444,35 +472,43 @@ echo mysqli_error($conn);
                                     </div>
 
                                     <div class="profile-details hidden">
+                                        <p><strong>Reference:</strong> <?php echo $referenceNumber; ?></p>
                                         <p><strong>Start of residency:</strong> <?php echo $dateOfEntry; ?></p>
                                         <p><strong>End of residency:</strong> <?php echo $dateOfExit; ?></p>
                                         <p><strong>Room:</strong> <?php echo "$roomName - $roomType"; ?></p>
                                         <p><strong>Booking date:</strong> <?php echo $bookingDate; ?></p>
                                         <p><strong>Last update:</strong> <?php echo $lastUpdate; ?></p>
 
+                                        <?php if (!empty($remark)) { ?>
+                                            <p style="text-align: center; background-color: yellow; color: black; padding: 5px;"><?php echo $remark; ?></p>
+                                        <?php } ?>
+
                                         <div class="profile-actions">
                                             <!-- <form action="update_residency_status.php" method="post"> -->
                                             <?php
                                             switch ($residencyStatus) {
                                                 case 'currently residing':
-                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"residency ended\", $residencyID)'><i class='fa-solid fa-door-open'></i> End residency</button>";
+                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"residency ended\", $residencyID, \"Residency ended by owner\")'><i class='fa-solid fa-door-open'></i> End residency</button>";
                                                     break;
     
                                                 case 'pending':
-                                                    echo "<button class='btn btn-primary' onclick='toggleResidencyStatus(\"confirmed\", $residencyID)'><i class='fa-solid fa-thumbs-up'></i> Accept</button>";
-                                                    echo "<button class='btn btn-secondary' onclick='toggleResidencyStatus(\"rejected\", $residencyID)'><i class='fa-solid fa-thumbs-down'></i> Reject</button>";
+                                                    echo "<button class='btn btn-primary' onclick='toggleResidencyStatus(\"confirmed\", $residencyID, \"Reservation confirmed by owner\")'><i class='fa-solid fa-thumbs-up'></i> Accept</button>";
+                                                    echo "<button class='btn btn-secondary' onclick='openRemarkModal()'><i class='fa-solid fa-thumbs-down'></i> Reject</button>";
+
+                                                    include "../../modal/residency_remark_modal.php";
+
                                                     break;
     
                                                 case 'confirmed':
-                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"cancelled\", $residencyID)'><i class='fa-solid fa-ban'></i> Cancel reservation</button>";
+                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"cancelled\", $residencyID, \"Reservation cancelled by owner\")'><i class='fa-solid fa-ban'></i> Cancel reservation</button>";
                                                     break;
     
                                                 case 'residency ended':
-                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"currently residing\", $residencyID)'><i class='fa-solid fa-repeat'></i> Renew residency</button>";
+                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"currently residing\", $residencyID, \"Renewed by owner\")'><i class='fa-solid fa-repeat'></i> Renew residency</button>";
                                                     break;
     
                                                 case 'rejected':
-                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"currently residing\", $residencyID)'><i class='fa-solid fa-thumbs-up'></i> Reconsider accepting</button>";
+                                                    echo "<button class='btn' onclick='toggleResidencyStatus(\"currently residing\", $residencyID, \"Reconsidered by owner\")'><i class='fa-solid fa-thumbs-up'></i> Reconsider accepting</button>";
                                                     break;
                                                     
                                             }
@@ -487,7 +523,7 @@ echo mysqli_error($conn);
                             <?php
                                 }
                             } else {
-                                $roomSql = "SELECT * FROM rooms WHERE EstablishmentID = $tab ORDER BY RoomName";
+                                $roomSql = "SELECT * FROM rooms WHERE EstablishmentID = $tab AND Availability != 'Deleted' ORDER BY RoomName";
                                 $roomResult = mysqli_query($conn, $roomSql);
 
                                 if (mysqli_num_rows($roomResult) > 0) {
@@ -500,7 +536,7 @@ echo mysqli_error($conn);
                                         echo "<p style='font-size: 12px; color: grey'>$roomType &middot; Good for $maxOccupancy person(s)</p>";
                                         // echo "<hr>";
 
-                                        $tenantSql = "SELECT p.ProfilePicture, p.FirstName, p.MiddleName, p.LastName, p.ExtName, p.Gender, u.Username, t.UniversityID, rs.ResidencyID, rs.DateOfEntry, rs.DateOfExit, rs.Status AS ResidencyStatus, r.RoomName, r.RoomType, rs.CreatedAt AS BookingDate, rs.UpdateAt AS LastUpdate, e.Name AS EstablishmentName FROM residency rs INNER JOIN tenant t ON t.TenantID = rs.TenantID INNER JOIN rooms r ON r.RoomID = rs.RoomID INNER JOIN user_account u ON u.UserID = t.UserID INNER JOIN person p ON p.PersonID = u.PersonID INNER JOIN establishment e ON e.EstablishmentID = r.EstablishmentID WHERE r.RoomID = $roomID AND rs.Status = '$res_st' $searchFilter ORDER BY p.LastName, p.FirstName, p.ExtName, p.MiddleName";
+                                        $tenantSql = "SELECT p.ProfilePicture, p.FirstName, p.MiddleName, p.LastName, p.ExtName, p.Gender, u.Username, t.UniversityID, rs.ResidencyID, rs.DateOfEntry, rs.DateOfExit, rs.Status AS ResidencyStatus, r.RoomName, r.RoomType, rs.CreatedAt AS BookingDate, rs.UpdateAt AS LastUpdate, e.Name AS EstablishmentName, rs.Remark FROM residency rs INNER JOIN tenant t ON t.TenantID = rs.TenantID INNER JOIN rooms r ON r.RoomID = rs.RoomID INNER JOIN user_account u ON u.UserID = t.UserID INNER JOIN person p ON p.PersonID = u.PersonID INNER JOIN establishment e ON e.EstablishmentID = r.EstablishmentID WHERE r.RoomID = $roomID AND rs.Status = '$res_st' $searchFilter ORDER BY p.LastName, p.FirstName, p.ExtName, p.MiddleName";
                                         $tenantResult = mysqli_query($conn, $tenantSql);
 
                                         if (mysqli_num_rows($tenantResult) > 0) {
@@ -513,7 +549,7 @@ echo mysqli_error($conn);
                                                 $profilePicture = $tenants['ProfilePicture'] ?? "/bookingapp/user/$gender-no-face.jpg";
 
                                                 $firstName = $tenants['FirstName'] ?? '';
-                                                $middleName = isset($tenants['MiddleName']) ? $tenants['MiddleName'][0] . '.' : '';
+                                                $middleName = isset($tenants['MiddleName']) ? $tenants['MiddleName'] : '';
                                                 $lastName = $tenants['LastName'] ?? '';
                                                 $extName = $tenants['ExtName'] ?? '';
 
@@ -529,6 +565,8 @@ echo mysqli_error($conn);
 
                                                 $residencyID = $tenants['ResidencyID'];
                                                 $residencyStatus = $tenants['ResidencyStatus'];
+
+                                                $remark = $tenants['Remark'];
 
                                                 $dateOfEntry = $tenants['DateOfEntry'];
                                                 $bookingDate = $tenants['BookingDate'];
@@ -547,6 +585,8 @@ echo mysqli_error($conn);
 
                                                 $roomName = $tenants['RoomName'];
                                                 $roomType = $tenants['RoomType'];
+
+                                                $referenceNumber = $residencyID . date("miyhis", strtotime($bookingDate)) . date("miyhis", strtotime($dateOfEntry));
 
                                         ?>
 
@@ -570,11 +610,16 @@ echo mysqli_error($conn);
                                     </div>
 
                                     <div class="profile-details hidden">
+                                        <p><strong>Reference:</strong> <?php echo $referenceNumber; ?></p>
                                         <p><strong>Start of residency:</strong> <?php echo $dateOfEntry; ?></p>
                                         <p><strong>End of residency:</strong> <?php echo $dateOfExit; ?></p>
                                         <p><strong>Room:</strong> <?php echo "$roomName - $roomType"; ?></p>
                                         <p><strong>Booking date:</strong> <?php echo $bookingDate; ?></p>
                                         <p><strong>Last Update:</strong> <?php echo $lastUpdate; ?></p>
+
+                                        <?php if (!empty($remark)) { ?>
+                                            <p style="text-align: center; background-color: yellow; color: black; padding: 5px;"><?php echo $remark; ?></p>
+                                        <?php } ?>
 
                                         <div class="profile-actions">
                                         <?php
@@ -586,7 +631,7 @@ echo mysqli_error($conn);
 
                                             case 'pending':
                                                 echo "<button class='btn btn-primary' onclick='toggleResidencyStatus(\"confirmed\", $residencyID)'><i class='fa-solid fa-thumbs-up'></i> Accept</button>";
-                                                echo "<button class='btn btn-secondary' onclick='toggleResidencyStatus(\"rejected\", $residencyID)'><i class='fa-solid fa-thumbs-down'></i> Reject</button>";
+                                                echo "<button class='btn btn-secondary' onclick='op'><i class='fa-solid fa-thumbs-down'></i> Reject</button>";
                                                 break;
 
                                             case 'confirmed':
@@ -633,6 +678,8 @@ echo mysqli_error($conn);
     <!-- Footer -->
     <?php include "../../php/footer.php"; ?>
 
+    
+
     <!-- <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script> -->
     <script src="/bookingapp/js/jquery-1.10.2.min.js"></script>
     <script src="/bookingapp/js/bootstrap.bundle.min.js"></script>
@@ -642,6 +689,15 @@ echo mysqli_error($conn);
     <script type="text/javascript"></script>
 
     <script>
+
+        // Modal
+        function openRemarkModal() {
+            document.getElementById('statusRemarkModal').style.display = "flex";
+        }
+
+        function closeModal(modalID) {
+            document.getElementById(modalID).style.display = "none";
+        }
 
         // Check internet
         window.addEventListener('load', function() {
@@ -700,8 +756,14 @@ echo mysqli_error($conn);
             window.location.href = `?tab=${tab}&res_st=${res_st}`;  
         }
 
-        function toggleResidencyStatus(status, residencyID) {
-            const data = { id: residencyID, stat: status };
+        function toggleResidencyStatus(status, residencyID, remark) {
+
+            if (remark === 'rejected') {
+                remark = document.getElementById('status-remark').value;
+            }
+
+            const data = { id: residencyID, stat: status, rmrk: remark };
+
 
             fetch('update_residency_status.php', {
                 method: 'POST',
@@ -720,7 +782,7 @@ echo mysqli_error($conn);
             });
             status = status.replace(/ /g, "+");
             var currentTab = '<?php echo $tab; ?>';
-            redirect("?res_st=" + status + "&tab=" + currentTab);
+            redirect("?res_st=" + status + "&tab=" + currentTab + "&rmrk=" + remark);
         }
 
         // loadTab('current');

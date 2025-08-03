@@ -35,8 +35,14 @@
                 </div>
             </fieldset>
 
+            <div class="warning" id="warning-element" style="text-align: center; margin-top: 10px; background-color: red; color: white; padding: 20px; border-radius: 50px" hidden>
+                <h1><i class="fa-solid fa-exclamation-triangle"></i></h1>
+                <h3>This room is not available to you because of your gender.</h3>
+                <p>Find other room that is applicable to you.</p>
+            </div>
+
             <div class="btn-group" style="margin: 20px; display: flex; justify-content: flex-end; width: 30%; flex-direction: row; float: right; gap: 10px;">
-                <button type="submit" class="btn btn-primary" name="book-now">Book Now</button>
+                <button type="submit" class="btn btn-primary" name="book-now" id="book-now-btn">Book Now</button>
                 <button type="button" class="btn btn-secondary" onclick="closeModal('bookRoomModal')">Cancel</button>
             </div>
         </form>

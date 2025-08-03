@@ -34,7 +34,7 @@ function generateStars($rating) {
     return $stars;
 }
 
-$estSql = "SELECT e.EstablishmentID, e.Name, g.Latitude, g.Longitude FROM geo_tags g INNER JOIN establishment e ON e.EstablishmentID = g.EstablishmentID";
+$estSql = "SELECT e.EstablishmentID, e.Name, g.Latitude, g.Longitude FROM geo_tags g INNER JOIN establishment e ON e.EstablishmentID = g.EstablishmentID WHERE e.Status != 'removed'";
 $estResult = mysqli_query($conn, $estSql);
 
 if (mysqli_num_rows($estResult) > 0) {

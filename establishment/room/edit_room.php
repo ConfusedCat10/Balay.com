@@ -54,6 +54,18 @@ if (isset($_POST['submit-edit-room'])) {
         case "Luxury suite":
             $maxOccupant = 4;
             break;
+
+        case "Five-person occupancy":
+            $maxOccupant = 5;
+            break;
+
+        case "Six-person occupancy":
+            $maxOccupant = 6;
+            break;
+        
+        case "Ten-person occupancy":
+            $maxOccupant = 10;
+            break;
         
         default:
             $maxOccupant = 1;

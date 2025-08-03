@@ -31,6 +31,7 @@ $successMsg = "";
 
         $name = mysqli_real_escape_string($conn, $_POST['name'] ?? '');
         $type = mysqli_real_escape_string($conn, $_POST['type']);
+        $address = mysqli_real_escape_string($conn, $_POST['address'] ?? '');
         $floors = (int) $_POST['floors'] ?? 0;
 
         $description = mysqli_real_escape_string($conn, $_POST['description'] ?? '');
@@ -38,14 +39,14 @@ $successMsg = "";
         $genderInclusivity = mysqli_real_escape_string($conn, $_POST['gender-inclusivity'] ?? '');
 
         try {
-            $sql = "INSERT INTO establishment (OwnerID, Name, Description, NoOfFloors, Type, GenderInclusiveness) VALUES (?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO establishment (OwnerID, Name, Description, Address, NoOfFloors, Type, GenderInclusiveness) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = mysqli_prepare($conn, $sql);
 
             if (!$stmt) {
                 throw new Exception("Prepared statement error: " . mysqli_error($conn));
             }
 
-            mysqli_stmt_bind_param($stmt, 'ississ', $ownerID, $name, $description, $floors, $type, $genderInclusivity);
+            mysqli_stmt_bind_param($stmt, 'isssiss', $ownerID, $name, $description, $address, $floors, $type, $genderInclusivity);
 
             if (!mysqli_stmt_execute($stmt)) {
                 throw new Exception("Statement execution error: " . mysqli_stmt_error($stmt));
@@ -302,6 +303,11 @@ $successMsg = "";
                             <div class="form-inline" style="flex-direction: column; align-items: flex-start">
                                 <label for="description">Description:</label>
                                 <textarea name="description" id="description" cols="50" rows="2" wrap="hard" maxlength="300" style="resize: none; width: 100%;" placeholder="Describe your place that potential tenants may read..."></textarea>
+                            </div>
+
+                            <div class="form-inline" style="flex-direction: column; align-items: flex-start">
+                                <label for="address">Address:</label>
+                                <input type="text" name="address" id="address" placeholder="Enter address..." required>
                             </div>
 
                             <div class="form-inline" style="flex-direction: column; align-items: flex-start">

@@ -1,11 +1,11 @@
 <footer class="footer" id="contact">
-    <div class="section-container footer-container">
+    <div class="section-container footer-container" style="display: flex; flex-direction: row; justify-content: space-between; gap: 30px; max-width: 100%">
         <div class="footer-col">
             <div class="logo">
                 <a href="/bookingapp/index.php"><img src="/bookingapp/assets/site-logo/logo-text-white.png" alt="Balay.com logo" style="width: 200px">
                 </a>
             </div>
-            <div class="section-description">
+            <div class="section-description" style="text-align:justify">
                 Your preimeir online accommodation destination designed exclusively for students at Mindanao State University. Step into a world of comfort with our diverse offerings, including cottages and dormitories. Our unique geotagging feature ensures you find a perfect place to stay. At <span>Balay.com</span>, we're committed to enhancing your student living experience making your stay both enjoyable and memorable.
             </div>
             <?php if ($loggedIn && $accountRole === 'tenant') { ?>
@@ -62,9 +62,9 @@
         </div>
 
         <div class="footer-col">
-            <h4>CONTACT US</h4>
+            <!-- <h4>CONTACT US</h4> -->
             <ul class="footer-links">
-                <li><a href="mailto:balay@msumain.edu.ph" title="Open email application">balay@msumain.edu.ph</a></li>
+                <!-- <li><a href="mailto:balay@msumain.edu.ph" title="Open email application">balay@msumain.edu.ph</a></li> -->
             </ul>
             <!-- <div class="footer-socials">
                 <a href="#" title="Open Facebook"><img src="/bookingapp/assets/icons/facebook.png" alt="facebook" /></a>

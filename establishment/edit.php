@@ -9,7 +9,7 @@ $admin = isset($_SESSION['admin']) ? $_SESSION['admin'] : null;
 $errorMsg = "";
 $successMsg = "";
 
-$estID = null;
+$estID = "";
 $establishment = [];
 
 if (isset($_GET['est']) && $_GET['est'] !== null) {
@@ -20,6 +20,10 @@ if (isset($_GET['est']) && $_GET['est'] !== null) {
 
     if (mysqli_num_rows($result) > 0) {
         $establishment = mysqli_fetch_assoc($result);
+
+        if ($establishment['Status'] === 'removed') {
+            header("Location: /bookingapp/establishment/index.php");
+        }
     }
 }
 
@@ -45,32 +49,31 @@ if (isset($_GET['est']) && $_GET['est'] !== null) {
         $type = mysqli_real_escape_string($conn, $_POST['type']);
         $floors = (int) $_POST['floors'] ?? 0;
 
+        $address = mysqli_real_escape_string($conn, $_POST['address'] ?? '');
         $description = mysqli_real_escape_string($conn, $_POST['description'] ?? '');
 
         $genderInclusivity = mysqli_real_escape_string($conn, $_POST['gender-inclusivity'] ?? '');
-        $status = mysqli_real_escape_string($conn, $_POST['status'] ?? '');
+        $status = mysqli_real_escape_string($conn, $_POST['status'] ?? 'available');
 
         try {
-            $sql = "UPDATE establishment SET Name = ?, Description = ?, NoOfFloors = ?, Status = ?, Type = ?, GenderInclusiveness = ? WHERE EstablishmentID = ?";
+            $sql = "UPDATE establishment SET Name = ?, Description = ?, Address = ?, NoOfFloors = ?, Status = ?, Type = ?, GenderInclusiveness = ? WHERE EstablishmentID = ?";
             $stmt = mysqli_prepare($conn, $sql);
 
             if (!$stmt) {
                 throw new Exception("Prepared statement error: " . mysqli_error($conn));
             }
 
-            mysqli_stmt_bind_param($stmt, 'ssisssi', $name, $description, $floors, $status, $type, $genderInclusivity, $estID);
+            mysqli_stmt_bind_param($stmt, 'sssisssi', $name, $description, $address,    $floors, $status, $type, $genderInclusivity, $estID);
 
             if (!mysqli_stmt_execute($stmt)) {
                 throw new Exception("Statement execution error: " . mysqli_stmt_error($stmt));
             }
 
-            if ($status === 'removed') {
-                header("Location: index.php");
-            }
-
             $successMsg = "<i class='fa-solid fa-circle-check'></i> Successfully updated the establishment.";
             $encryptedEstID = base64_encode($estID);
-            header("Location: establishment.php?est=$encryptedEstID");
+            header("Location: /bookingapp/establishment/establishment.php?est=$encryptedEstID");
+
+            // echo $status;
 
         } catch (Exception $e) {
             $errorMsg = "<i class='fa-solid fa-circle-xmark'></i> " . $e->getMessage();
@@ -326,6 +329,11 @@ if (isset($_GET['est']) && $_GET['est'] !== null) {
                                 echo $description;
                                 ?>
                                 </textarea>
+                            </div>
+
+                            <div class="form-inline" style="flex-direction: column; align-items: flex-start">
+                                <label for="address">Address:</label>
+                                <input type="text" name="address" id="address" placeholder="Enter address..." value="<?php echo $establishment['Address'] ?>" required>
                             </div>
 
                             <div class="form-inline" style="flex-direction: column; align-items: flex-start">

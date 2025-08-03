@@ -67,6 +67,32 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 
 // echo generateStars(3.5);
 
+if (isset($_POST['confirm-establishment'])) {
+    $estID = $_POST['est-id'];
+    $action = mysqli_real_escape_string($conn, $_POST['action']);
+
+    $action = $action === 'approve' ? 'available' : 'disapproved';
+
+    try {
+        $sql = "UPDATE establishment SET Status = ? WHERE EstablishmentID = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+
+        if (!$stmt) {
+            throw new Exception(mysqli_error($conn));
+        }
+
+        mysqli_stmt_bind_param($stmt, "si", $action, $estID);
+
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception(mysqli_stmt_error($stmt));
+        }
+
+        header("Location: index.php");
+    } catch (Exception $e) {
+        echo $e->getMessage();
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -546,6 +572,27 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
             margin: 1px;
         }
 
+        .approve-btn {
+            color: white;
+            background-color: #00552b;
+        }
+
+        .reject-btn {
+            color: white;
+            background-color: red;
+        }
+
+        .approve-btn:hover {
+            background-color: white !important;
+            color: black !important;
+            border: 1px solid #00552b !important;
+        }
+
+        .reject-btn:hover {
+            background-color: white !important;
+            color: black !important;
+            border: 1px solid red !important;
+        }
 
         @media (max-width: 1000px) {
             .form-inline input, .form-inline select {
@@ -672,6 +719,32 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 
                                 $name = $row['Name'];
                                 $type = $row['Type'];
+                                $address = $row['Address'];
+
+                                $status = $row['Status'];
+                                $statusTextColor = "white";
+                                $statusBgColor = "black";
+
+                                switch ($status) {
+                                    case 'pending':
+                                        $statusTextColor = "black";
+                                        $statusBgColor = "#ffd700";
+                                        break;
+
+                                    case 'available':
+                                        $statusTextColor = "white";
+                                        $statusBgColor = "#00552b";
+                                        break;
+                                    
+                                    case 'disapproved':
+                                        $statusTextColor = "white";
+                                        $statusBgColor = "red";
+                                        break;
+
+                                    default:
+                                        $statusTextColor = "white";
+                                        $statusBgColor = "black";
+                                }
 
                                 $genderInclusiveness = $row['GenderInclusiveness'];
                                 
@@ -742,7 +815,7 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
                                     $row = mysqli_fetch_assoc($photoResult);
                                     
                                     $featuredPhoto = $row['Photo1'];
-                                    $featuredPhoto = isset($featuredPhoto) && $featuredPhoto !== '' ? $featuredPhoto : "/bookingapp/assets/images/msu-facade.jpg"; 
+                                    $featuredPhoto = isset($featuredPhoto) && $featuredPhoto !== '' && !imageExists($featuredPhoto) ? $featuredPhoto : "/bookingapp/assets/images/msu-facade.jpg"; 
                                     $photoDescription = $row['Description1'] ?? 'No description';
                                 }
 
@@ -786,10 +859,16 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
                                     </div>
                                 </div>
                                 <div class="room-card-details clearfix">
+                                    <span class="room-availability" style="font-size: 14px; color: <?php echo $statusTextColor; ?>; background-color: <?php echo $statusBgColor; ?>; padding: 5px; border-radius: 5px; float: right;">
+                                        <?php echo $status; ?>
+                                    </span>
                                     <h4><?php echo $name; ?></h4>
                                     <p>
                                         <span><i class="fa-solid fa-building"></i> <?php echo $type; ?></span><br>
                                         <?php echo generateStars(4.5); ?>
+                                    </p>
+                                    <p>
+                                        <span><i class="fa-solid fa-location-pin"></i> <?php echo isset($address) ? $address: 'No address yet!'; ?></span>
                                     </p>
                                     <p>
                                         <!-- <span><i class="fa-solid fa-location-pin"></i> <?php echo $location; ?></span><br> -->
@@ -797,7 +876,7 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
                                         <span><i class="fa-solid fa-door-open"></i> <?php echo "$noOfRooms room(s)"; ?></span>
                                         <?php
                                         
-                                        $amenitySql = "SELECT f.Icon, f.Name, f.FeatureID FROM establishment_features rf INNER JOIN features f ON f.FeatureID = rf.FeatureID WHERE rf.EstablishmentID = $establishmentID";
+                                        $amenitySql = "SELECT f.Icon, f.Name, f.FeatureID FROM establishment_features rf INNER JOIN features f ON f.FeatureID = rf.FeatureID WHERE rf.EstablishmentID = $establishmentID LIMIT 5";
                                         $amenityResult = mysqli_query($conn, $amenitySql);
 
                                         if (mysqli_num_rows($amenityResult) > 0) { ?>
@@ -822,6 +901,13 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
                                             echo 'Book now';
                                         } ?>
                                     </button>
+                                    
+                                    <?php 
+                                    // echo "$accountRole | $status";
+                                    if ($accountRole === 'admin' && $status === 'pending') { ?>
+                                    <button class="btn approve-btn" onclick="confirmEstablishment('approve', <?php echo $establishmentID; ?>)"><i class="fa-solid fa-circle-check"></i> Approve</button>
+                                    <button class="btn reject-btn" onclick="confirmEstablishment('reject', <?php echo $establishmentID; ?>)"><i class="fa-solid fa-circle-xmark"></i> Reject</button>
+                                    <?php } ?>
                                 </div>
                             </div>
                         <?php } ?>
@@ -848,6 +934,8 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
         </div>
         
     </div>
+
+    <?php include ('../modal/confirm_establishment.php'); ?>
     
     <div id="toastBox"></div>
 
@@ -866,28 +954,6 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 
     <script>
 
-        // Check internet
-        const offlinePageUrl = "/bookingapp/no_internet_connection.php";
-
-        // Function to handle internet connection status
-        function checkInternetConnection() {
-            if (!navigator.onLine) {
-                // Save the current page URL to localStorage
-                localStorage.setItem("lastVisitedPage", window.location.href);
-                // Redirect to the "No Internet Connection" page
-                window.location.href = offlinePageUrl;
-            }
-        }
-
-        // Add event listeners for network status changes
-        window.addEventListener("online", () => {
-        // Redirect back to the last visited page if it exists
-            const lastVisitedPage = localStorage.getItem("lastVisitedPage");
-            if (lastVisitedPage && lastVisitedPage !== offlinePageUrl) {
-                localStorage.removeItem("lastVisitedPage"); // Clear the stored page
-                window.location.href = lastVisitedPage; // Redirect back
-            }
-        });
 
         // Set the current year in the footer dynamically
         document.getElementById('year').textContent = new Date().getFullYear();
@@ -932,6 +998,21 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
+        }
+
+        function confirmEstablishment(action, establishmentID) {
+            openModal("confirmEstablishmentModal");
+            var modalTitle = document.getElementById("confirm-modal-title");
+            var actionSpan = document.getElementById("action");
+            var actionInput = document.getElementById("action-input");
+            var estIDInput = document.getElementById('est-id');
+            
+            actionSpan.textContent = action;
+            actionInput.value = action;
+            estIDInput.value =establishmentID;
+
+            modalTitle.textContent = action === 'approve' ? "Approve establishment?" : "Reject establishment?";
+
         }
 
         // Toast notification functionalities

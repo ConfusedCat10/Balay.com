@@ -2,18 +2,18 @@
 
 <div class="modal" id="addEstablishmentAmenityModal" >
     <div class="modal-content" style="overflow: auto">
-        <span class="close" onclick="closeModal('addEstablishmentAmenityModal'); window.location.reload()">&times;</span>
+        <span class="close" onclick="closeModal('addEstablishmentAmenityModal'); window.location.reload()">&times; Close and Save</span>
         <h2>Manage establishment amenities</h2><br><br>
         <form action="" method="post">
         
             <?php
-            $sql = "SELECT * FROM features ORDER BY Name";
+            $sql = "SELECT * FROM features WHERE Category IN ('building', 'both') ORDER BY Name";
             $result = mysqli_query($conn, $sql);
 
             if (mysqli_num_rows($result) > 0) {
             ?>
 
-            <fieldset style="heigth: 20%; overflow: auto">
+            <fieldset style="height: 20%; overflow: auto">
                     <legend>Amenities</legend>
                     <div class="chip-group clearfix">
                         <?php while ($row = mysqli_fetch_assoc($result)) { $featureID = $row['FeatureID']; ?>

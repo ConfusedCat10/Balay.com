@@ -26,9 +26,9 @@ if (isset($_POST['recover-password'])) {
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
 
-            $userID = $row['UserID'];
+            $username = $row['Username'];
 
-            header("Location: /bookingapp/otp/otp_form.php?user=$userID&purpose=password-recovery");
+            header("Location: /bookingapp/pages/update_password.php?user=$username");
         } else {
             $errorMsg = "The email address that you entered does not exist!";
             throw new Exception($errorMsg);

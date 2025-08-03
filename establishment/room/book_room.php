@@ -9,21 +9,23 @@ if (isset($_POST['book-now'])) {
     $dateOfEntry = $_POST['date-of-entry'];
 
     $status = "pending";
+
+    $remark = "Room reserved by tenant";
     try {
 
-        if (checkResidencyEstType($conn, $tenantiD, $roomID)) {
+        if (checkResidencyEstType($conn, $tenantID, $roomID)) {
             throw new Exception("Failed to book. You cannot both with the same establishment type where you are currently residing at.");
         }
 
         // Add as a resident (assuming the user is really paying)
-        $sql = "INSERT INTO residency (TenantID, RoomID, DateOfEntry, Status) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO residency (TenantID, RoomID, DateOfEntry, Status, Remark) VALUES (?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($conn, $sql);
 
         if (!$stmt) {
             throw new Exception(mysqli_error($conn));
         }
 
-        mysqli_stmt_bind_param($stmt, 'iiss', $tenantID, $roomID, $dateOfEntry, $status);
+        mysqli_stmt_bind_param($stmt, 'iisss', $tenantID, $roomID, $dateOfEntry, $status, $remark);
 
         if (!mysqli_stmt_execute($stmt)) {
             throw new Exception(mysqli_stmt_error($stmt));

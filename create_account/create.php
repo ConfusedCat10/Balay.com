@@ -3,9 +3,9 @@ include "../database/database.php";
 
 session_start();
 
-if (isset($_SESSION['userID']) && !isset($_SESSION['admin'])) {
-    header("Location: /bookingapp/page_not_found.php");
-}
+// if (isset($_SESSION['userID']) && !isset($_SESSION['admin'])) {
+//     header("Location: /bookingapp/page_not_found.php");
+// }
 
 $selectedRole = "";
 $errorMsg = "";
@@ -24,9 +24,9 @@ if (!in_array($selectedRole, $allowedRoles)) {
     header("Location: /bookingapp/page_not_found.html");
 }
 
-if (!isset($_SESSION['userID']) && $selectedRole !== 'tenant') {
-    header("Location: /bookingapp/page_not_found.php");
-}
+// if (!isset($_SESSION['userID']) && $selectedRole !== 'tenant') {
+//     header("Location: /bookingapp/page_not_found.php");
+// }
 
 
 // Create an account into the database
@@ -110,7 +110,7 @@ if (isset($_POST['submit-account'])) {
             throw new Exception($errorMsg);
         }
 
-        if (universityIDExists($conn, $universityID)) {
+        if ($selectedRole === 'tenant' && universityIDExists($conn, $universityID)) {
             $errorMsg = "University ID already exists.";
             throw new Exception($errorMsg);
         }
@@ -147,9 +147,9 @@ if (isset($_POST['submit-account'])) {
             throw new Exception($errorMsg);
         }
 
-        // $_SESSION['userID'] = $userID;
         if ($selectedRole === 'tenant') {
-            header("Location: /bookingapp/otp/otp_form.php?user=$userID&purpose=email");
+            $_SESSION['userID'] = $userID;
+            header("Location: /bookingapp/index.php");
         } else {
             header("Location: /bookingapp/admin/accounts.php?tab=$selectedRole");
         }
@@ -198,7 +198,7 @@ function universityIDExists($conn, $universityID) {
 
 function userTenantExists($conn, $userID) {
     $roleSql = "SELECT * FROM tenant WHERE UserID = $userID";
-    $result = mysqli_query($conn, $result);
+    $result = mysqli_query($conn, $roleSql);
 
     return mysqli_num_rows($result) > 0;
 }
@@ -207,7 +207,7 @@ function userOwnerExists($conn, $userID) {
     $roleSql = "SELECT * FROM establishment_owner WHERE UserID = $userID";
     $result = mysqli_query($conn, $roleSql);
 
-    return mysqli_num_rows($result > 0);
+    return mysqli_num_rows($result) > 0;
 }
 
 function userAdminExists($conn, $userID) {
@@ -446,7 +446,7 @@ function addAdmin($conn, $userID) {
             border: 2px solid transparent;
             padding: 10px;
             border-radius: 8px;
-            transition: border-color: 0.3s;
+            transition: border-color 0.3s;
             width: 100%;
         }
 
@@ -657,7 +657,7 @@ function addAdmin($conn, $userID) {
 
         var errorMsg = document.getElementById('error-msg');
         var submitButton = document.getElementById('submit-account');
-        var role = document.getElementById('role').value;
+        var role = '<?php echo $_GET['role']; ?>';
 
         const firstName = document.getElementById('first-name');
         const lastName = document.getElementById('last-name');
@@ -669,7 +669,7 @@ function addAdmin($conn, $userID) {
         const confirmPassword = document.getElementById('confirm-password');
 
         let idNumber = "";
-        let email = "";
+        let email =  document.getElementById("email");
 
         let idNumberOK = false;
         let emailOK = false;
@@ -682,8 +682,6 @@ function addAdmin($conn, $userID) {
         });
 
         function validateFields(role) {
-            // Common fields
-            email = document.getElementById("email");
 
             if (role === 'tenant') {
                 // Tenant fields

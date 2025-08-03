@@ -2,10 +2,10 @@
 
 // Just put comment on the database not being used
 // Use this for dummy data
-$conn = mysqli_connect("localhost", "root", "", "bookingapp");
+// $conn = mysqli_connect("localhost", "root", "", "bookingapp");
 
 // Use this for clean data.
-// $conn = mysqli_connect("localhost", "root", "", "bookingapp_empty"); 
+ $conn = mysqli_connect("localhost", "root", "", "bookingapp_empty"); 
 
 // $conn = mysqli_connect("localhost", "root", "", "bookingapp_official");
 

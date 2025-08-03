@@ -1,5 +1,5 @@
 <div class="modal" id="editReviewModal">
-    <div class="modal-content" style="height: auto; width: 60%">
+    <div class="modal-content" style="height: 100%; width: 60%; overflow:scroll">
         <span class="close" onclick="closeModal('editReviewModal');">&times;</span>
         <h1>Edit review</h1>
         <form action="/bookingapp/establishment/edit_review.php" method="post" style="padding: 10px; margin-top: 10px; gap: 10px; display: flex; flex-direction: column; justify-content: flex-end">

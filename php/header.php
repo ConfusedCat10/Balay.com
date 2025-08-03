@@ -1,8 +1,9 @@
 <nav>
     <div class="balay-navbar">
         <div class="logo">
-            <a href="/bookingapp/index.php"><img src="/bookingapp/assets/site-logo/logo-text-white.png" alt="Balay.com logo">
+            <a href="/bookingapp/index.php"><img src="/bookingapp/assets/site-logo/logo-text-white.png" alt="Balay.com logo"> 
             </a>
+            
         </div>
         <div class="balay-nav-menu-btn" id="menu-btn">
             <i class="fa-solid fa-bars"></i>
@@ -17,9 +18,11 @@
                 <li><a href="/bookingapp/establishment/index.php"><i class="fa-solid fa-building"></i> Establishments</a></li>
                 <li><a href="/bookingapp/map.php"><i class="fa-solid fa-map"></i> View Map</a></li>
                 <li><a href="/bookingapp/admin/accounts.php"><i class="fa-solid fa-key"></i> Accounts</a></li>
+                <li><a href="/bookingapp/admin/reports.php"><i class="fa-solid fa-table"></i> Reports</a></li>
                 <!-- <li><a href="#home"><i class="fa-solid fa-gear"></i> Settings</a></li> -->
                 <li><a href="/bookingapp/logout.php"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a></li>
                 <li><a href="/bookingapp/user/profile.php?id=<?php echo $username; ?>" style="display: flex; wrap: nowrap; align-items: center;"><img src="<?php echo $profilePicture; ?>" style="width: 16px; height: 16px; object-fit: cover; border-radius: 50%; align-items: center; margin-right: 5px"> <?php echo $firstName; ?></a></li>
+                <li style="text-transform: capitalize; color: #ffd700; font-weight: bold;"><?php echo $accountRole; ?></li>
             </ul>
     <?php 
         } else if ($accountRole === "tenant") {
@@ -32,6 +35,7 @@
                 <!-- <li><a href="#home">Settings</a></li> -->
                 <li><a href="/bookingapp/logout.php"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a></li>
                 <li><a href="/bookingapp/user/profile.php?id=<?php echo $username; ?>" style="display: flex; wrap: nowrap; align-items: center;"><img src="<?php echo $profilePicture; ?>" style="width: 16px; height: 16px; object-fit: cover; border-radius: 50%; align-items: center; margin-right: 5px"> <?php echo $firstName; ?></a></li>
+                <li style="text-transform: capitalize; color: #ffd700; font-weight: bold;"><?php echo $accountRole; ?></li>
             </ul>
     <?php
         } else if ($accountRole === "owner") { 
@@ -43,6 +47,7 @@
                 <!-- <li><a href="#home">Settings</a></li> -->
                 <li><a href="/bookingapp/logout.php"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a></li>
                 <li><a href="/bookingapp/user/profile.php?id=<?php echo $username; ?>" style="display: flex; wrap: nowrap; align-items: center;"><img src="<?php echo $profilePicture; ?>" style="width: 16px; height: 16px; object-fit: cover; border-radius: 50%; align-items: center; margin-right: 5px"> <?php echo $firstName; ?></a></li>
+                <li style="text-transform: capitalize; color: #ffd700; font-weight: bold;"><?php echo $accountRole; ?></li>
             </ul>
     <?php    
         }

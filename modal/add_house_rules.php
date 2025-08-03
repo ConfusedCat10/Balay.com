@@ -1,12 +1,17 @@
 <div class="modal" id="addHouseRulesModal">
-    <div class="modal-content clearfix" style="height: auto">
+    <div class="modal-content clearfix" style="height: 80%; overflow: scroll;">
         <span class="close" onclick="closeModal('addHouseRulesModal')">&times;</span>
         <h3>Write a house rules for </h3>
         <h1><?php echo $establishment['Name']; ?></h1>
         <form method="post">
-            <textarea name="house-rules" id="" style="height: 500px; width: 100%; margin-top: 10px; border-radius: 5px; font-size: 18px; font-family: 'Roboto', arial, sans-serif; padding: 50px" wrap="hard" placeholder="Write something... (you can format it in HTML)">
+            <textarea name="house-rules" id="" style="height: 500px; width: 100%; margin-top: 10px; border-radius: 5px; font-size: 18px; font-family: 'Roboto', arial, sans-serif; padding: 10px" wrap="hard" placeholder="Write something... (you can format it in HTML)">
                 <?php
-                echo str_replace("\\r\\n", "\n", $establishment['HouseRules']);
+                $houseRules = $establishment['HouseRules'];
+                $houseRules = str_replace("\\r\\n", "\n", $houseRules);
+                $houseRules = str_replace("\\'", "'", $houseRules);
+                $houseRules = str_replace("\\\"", "\"", $houseRules);
+
+                echo $houseRules;
                 ?>
             </textarea>
 

@@ -124,7 +124,7 @@ function sendOtpEmail($fullName, $email, $otpCode) {
         $mail->isSMTP();
         $mail->Host = "smtp.gmail.com";
         $mail->SMTPAuth = true;
-        $mail->Username = "dkboystudios@gmail.com";
+        $mail->Username = "noormacalandong265@gmail.com";
         $mail->Password = "bgjnkklncdmbjvga";
         $mail->SMTPSecure = "ssl";
         $mail->Port = 465;
@@ -251,7 +251,7 @@ if (isset($_POST['verifyOTP'])) {
             
             sleep(3);
             $thisUsername = $thisUser['Username'];
-            clearOTPs($conn, $userID);
+            // clearOTPs($conn, $userID);
 
             
 

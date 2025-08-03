@@ -11,7 +11,7 @@ if (isset($_GET['id']) || $_GET['id'] !== '') {
     $purpose = isset($_GET['p']) ? $_GET['p'] : '';
 
     $sql = "SELECT CONCAT(UPPER(p.LastName), ', ', p.FirstName, ' ', p.MiddleName, ' ', p.ExtName) AS TenantName,
-    r.RoomID, r.RoomName, r.RoomType, r.PaymentOptions, r.PaymentStructure, r.GenderInclusiveness, r.FloorLocation, r.PaymentRate, e.EstablishmentID, e.Name AS EstablishmentName, e.Type AS EstablishmentType, res.ResidencyID, res.DateOfEntry, res.Status FROM residency res
+    r.RoomID, r.RoomName, r.RoomType, r.PaymentOptions, r.PaymentStructure, r.GenderInclusiveness, r.FloorLocation, r.PaymentRate, e.EstablishmentID, e.Name AS EstablishmentName, e.Type AS EstablishmentType, res.ResidencyID, res.DateOfEntry, res.CreatedAt AS BookingDate, res.Status FROM residency res
     INNER JOIN tenant t ON t.TenantID = res.TenantID
     INNER JOIN user_account u ON u.UserID = t.UserID
     INNER JOIN person p ON p.PersonID = u.PersonID
@@ -284,8 +284,15 @@ if (isset($_POST['ok-button'])) {
         $dateOfEntry = date("F d, Y", strtotime($residency['DateOfEntry']));
 
         $residencyID = $residency['ResidencyID'];
+
+        $referenceNumber = $residencyID . date("miyhis", strtotime($residency['BookingDate'])) . date("miyhis", strtotime($residency['DateOfEntry']));
     ?>
-    <div class="receipt-details" style="grid-template-columns: repeat(2, 1fr)">
+    <div class="receipt-details" style="grid-template-columns: repeat(1, 1fr)">
+        <?php
+        echo "<p><strong>Reference Number:</strong><br> $referenceNumber</p>";
+        ?>
+    </div>
+    <div class="receipt-details" style="grid-template-columns: repeat(3, 1fr)">
         <?php
         echo "<p><strong>Tenant:</strong><br> $tenantName</p>";
         echo "<p><strong>Residency ID:</strong><br> $residencyID</p>";

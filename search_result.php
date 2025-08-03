@@ -49,7 +49,7 @@ function generateStars($rating) {
     
     $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-    $amenities = isset($_GET['amenities']) ? explode(',', $_GET['amenities']) : [];
+    $amenities = isset($_GET['amenities']) ? $_GET['amenities'] : [];
 
     $priceRange = 0;
     $rating = 0;
@@ -84,26 +84,25 @@ function generateStars($rating) {
     $maxCapacity = isset($_GET['maxCapacity']) ? intval($_GET['maxCapacity']) : 4;
 
     $params = array();
+    if ($genderType) {
+        array_push($params, $genderType);
+    }
+    if ($establishmentType) {
+        array_push($params, $establishmentType);
+    }
+    
 
     $sql = "SELECT 
             e.EstablishmentID,
             e.Name AS EstablishmentName,
             e.Type AS EstablishmentType,
+            e.Status AS EstablishmentStatus,
             e.GenderInclusiveness, 
             e.Description,
-            gt.Latitude, 
-            gt.Longitude,
+            e.Address,
             ep.Photo1 AS Thumbnail,
             f.Name AS FeatureName,
-            f.Icon AS AmenityIcon,
-            MIN(r.PaymentRate) AS CheapestRoomPrice,
-            MAX(r.PaymentRate) AS ExpensiveRoomPrice,
-            GROUP_CONCAT(DISTINCT f.Name, '|', f.Icon) AS Features,
-            COUNT(DISTINCT re.ReviewID) AS NumberOfReviews,
-            IFNULL(AVG((re.StaffScore + re.FacilitiesScore + re.CleanlinessScore + re.ComfortScore + re.MoneyValueScore + re.LocationScore + re.SignalScore + re.SecurityScore) / 8), 0) AS AverageRating,
-            COUNT(DISTINCT res.ResidencyID) AS NumberOfBookings,
-            r.MaxOccupancy - COUNT(DISTINCT res.ResidencyID) AS VacantRooms,
-            SUM(r.MaxOccupancy) - COUNT(res.ResidencyID) AS TotalVacantSpaces
+            f.Icon AS AmenityIcon
         FROM 
             establishment e
         LEFT JOIN 
@@ -116,94 +115,33 @@ function generateStars($rating) {
             establishment_features ef ON e.EstablishmentID = ef.EstablishmentID
         LEFT JOIN 
             features f ON ef.FeatureID = f.FeatureID
-        LEFT JOIN 
-            reviews re ON r.RoomID = re.RoomID
-        LEFT JOIN 
-            residency res ON r.RoomID = res.RoomID
         WHERE 
-            e.Status != 'removed'
+            e.Status = 'available' ".($genderType ? "AND e.GenderInclusiveness = '" . $genderType . "'" : "")." 
+            ".($establishmentType ? "AND e.Type = '" . $establishmentType . "'" : "")."
+            ".(count($amenities) > 0 ? " AND f.Code IN ('".implode("','", $amenities)."')   ": "")."
+        GROUP BY
+            e.EstablishmentID, e.Status
+        ORDER BY
+            e.Name
     ";
-
-    // Filtering
-    if (!empty($searchQuery)) {
-        $sql .= " AND (e.Name LIKE '%$searchQuery%' OR f.Name LIKE '%$searchQuery%')";
-        
-    }
     
-    if ($priceRange > 0) {
-        $sql .= " AND r.PaymentRate >= $priceRange";
-        
-    }
-    
-    if ($rating > 0) {
-        $sql .= " AND AverageRating >= $rating";
-        
-    }
-
-    if ($remark > 0) {
-        $sql .= " AND AverageRating >= $remark";
-        
-    }
-    
-    if (!empty($amenities)) {
-        $amenityIds = implode(',', $amenities);
-        $sql .= " AND f.Icon IN ('$amenityIds')";
-        
-    }
-    
-    if (!empty($roomType)) {
-        $sql .= " AND r.RoomType = '$roomType'";
-        
-    }
-    
-    if (!empty($establishmentType)) {
-        $sql .= " AND e.Type = '$establishmentType'";
-        
-    }
-    
-    if (!empty($genderType)) {
-        $sql .= " AND e.GenderInclusiveness = '$genderType'";
-        
-    }
-    
-    if ($maxCapacity > 0) {
-        $sql .= " AND r.MaxOccupancy = $maxCapacity";
-        
-    }
-    
-    
-    $sql .= " GROUP BY e.EstablishmentID ";
-
-    // Sorting
-    switch ($orderType) {
-        case 'cheapest':
-            $sql .= " ORDER BY MIN(r.PaymentRate) ASC";
-            break;
-        case 'highest_price':
-            $sql .= " ORDER BY MAX(r.PaymentRate) DESC";
-            break;
-        case 'most_booked':
-            $sql .= " ORDER BY COUNT(DISTINCT res.ResidencyID) DESC";
-            break;
-        case 'most_vacant':
-            $sql .= " ORDER BY (r.MaxOccupancy - COUNT(DISTINCT res.ResidencyID)) DESC";
-            break;
-        default:
-            $sql .= " ORDER BY EstablishmentName";
-            break;
-    }
-
 
     // Pagination
     $itemsPerPage = 10;
     $offset = ($page - 1) * $itemsPerPage;
-    $sql .= " LIMIT $offset, $itemsPerPage";
+
+    if ($filter) {
+        $sql .= " LIMIT $offset, $itemsPerPage";
+    }
 
     // echo count($params);
     // echo $sql;
 
-    $establishmentResult = mysqli_query($conn, $sql);
-
+    
+    $establishmentResult = mysqli_query(
+        $conn, 
+        $sql
+    );
     $rowCount = 0;
 
 
@@ -473,23 +411,25 @@ function generateStars($rating) {
 
                 <div class="sort-container">
                     <label for="sort-select">Sort:</label>
-                    <select name="order-type" class="sort-select" id="sort-select">
-                        <option value="">Default</option>
+                    <select name="order-type" class="sort-select" id="sort-select" onchange="sortEstablishments()">
+                        <option value="alphabetical">Alphabetical</option>
                         <option value="cheapest">Cheapest</option>
                         <option value="highest_price">Highest price</option>
+                        <option value="most_popular">Most popular</option>
+                        <option value="top_rated">Top rated</option>
                         <option value="most_booked">Most booked</option>
                         <option value="most_vacant">Most vacant</option>
                     </select>
                         <p>Showing <?php echo $rowCount; ?> result(s).</p>
-                    <!- -->
+         
                 </div>
 
                 <div class="list-grid-switcher">
-                    <button class="toggle-btn list-mode" title="Select to toggle list view mode." id="toggleListView" onclick="setListView();"><i class="fa-solid fa-list"></i></button>
-                    <button class="toggle-btn grid-mode toggle-active" title="Select to toggle grid view mode." id="toggleGridView" onclick="setGridView();"><i class="class fa-solid fa-grip"></i></button>
+                    <button class="toggle-btn list-mode" title="Select to view establishments in list." id="toggleListView" onclick="setListView();"><i class="fa-solid fa-list"></i></button>
+                    <button class="toggle-btn grid-mode toggle-active" title="Select to view establishments in grid." id="toggleGridView" onclick="setGridView();"><i class="class fa-solid fa-grip"></i></button>
                 </div>
 
-                <div class="room-grid">
+                <div class="room-grid" id="establishments">
                     <?php 
                     // mysqli_stmt_bind_result($stmt, $establishmentID, $name, $type, $genderInclusiveness, $description,)
                     while ($row = mysqli_fetch_assoc($establishmentResult)) { 
@@ -499,6 +439,7 @@ function generateStars($rating) {
 
                         $name = $row['EstablishmentName'];
                         $type = $row['EstablishmentType'];
+                        $address = $row['Address'];
 
                         $genderInclusiveness = $row['GenderInclusiveness'];
                         
@@ -515,24 +456,25 @@ function generateStars($rating) {
                             $geoTag = mysqli_fetch_assoc($geoResult);
                         }
 
+                        $estStatus = $row['EstablishmentStatus'];
                         // Reviews
                         $rating = null;
                         $totalReviews = 0;
                         $totalScore = 0;
                         $maxScoreReview = 70; // Number of categories is 7. Adjust this. 7 * 10 points
 
-                        $reviewSql = "SELECT COUNT(rv.ReviewID) AS TotalReview, AVG(rv.StaffScore) AS StaffScore, AVG(rv.FacilitiesScore) AS FacilitiesScore, AVG(rv.CleanlinessScore) AS CleanlinessScore, AVG(rv.ComfortScore) AS ComfortScore, AVG(rv.SignalScore) AS SignalScore, AVG(rv.LocationScore) AS LocationScore, (rv.MoneyValueScore) AS MoneyValueScore, (AVG(rv.StaffScore + rv.FacilitiesScore + rv.CleanlinessScore + rv.ComfortScore + rv.SignalScore + rv.LocationScore + rv.MoneyValueScore) / 7) AS OverallScore FROM rooms r JOIN reviews rv ON r.RoomID = rv.RoomID WHERE r.EstablishmentID = $establishmentID";
+                        $reviewSql = "SELECT COUNT(rv.ReviewID) AS TotalReview, AVG(rv.StaffScore) AS StaffScore, AVG(rv.FacilitiesScore) AS FacilitiesScore, AVG(rv.CleanlinessScore) AS CleanlinessScore, AVG(rv.ComfortScore) AS ComfortScore, AVG(rv.SignalScore) AS SignalScore, AVG(rv.LocationScore) AS LocationScore, (rv.MoneyValueScore) AS MoneyValueScore, (AVG(rv.StaffScore + rv.FacilitiesScore + rv.CleanlinessScore + rv.ComfortScore + rv.SignalScore + rv.LocationScore + rv.MoneyValueScore + rv.SecurityScore) / 8) AS OverallScore FROM rooms r JOIN reviews rv ON r.RoomID = rv.RoomID WHERE r.EstablishmentID = $establishmentID";
                         $reviewResult = mysqli_query($conn, $reviewSql);
 
                         if (mysqli_num_rows($reviewResult) > 0) {
                             while ($row = mysqli_fetch_assoc($reviewResult)) {
-                                $totalReview = $row['TotalReview'];
+                                $totalReviews = $row['TotalReview'];
                                 $totalScore = $row['OverallScore'];
                             }
                         }
                         
                         // Calculate average score
-                        $averageScore = $totalReviews > 0 ? $totalScore / ($totalReviews * 7) : 0;
+                        $averageScore = $totalReviews > 0 ? $totalScore / ($totalReviews * 8) : 0;
 
                         // Convert average score to a 5-star rating system
                         $starRating = round(($averageScore / 10) * 5);
@@ -566,17 +508,115 @@ function generateStars($rating) {
                             $price = $rooms['PaymentRate'];
                             $noOfRooms = $rooms['NoOfRooms'];
                         }
+
+                        $tenants = 0;
+                        $tenantSql = "SELECT COUNT(rs.ResidencyID) AS NoOfTenants FROM residency rs INNER JOIN rooms r ON r.RoomID = rs.RoomID WHERE r.EstablishmentID = $establishmentID AND rs.Status = 'currently residing' AND r.Availability != 'Deleted'";
+                        $tenantResult = mysqli_query($conn, $tenantSql);
+
+                        if (mysqli_num_rows($tenantResult) > 0) {
+                            $rowTenant = mysqli_fetch_assoc($tenantResult);
+
+                            $tenants = $rowTenant['NoOfTenants'];
+                        }
+
+                        $vacancies = 0;
+                        $maxOccupancy = 1;
+                        $vacancySql = "SELECT SUM(r.MaxOccupancy) AS TotalAvailableSpaces FROM rooms r WHERE r.EstablishmentID = $establishmentID AND r.Availability = 'available'";
+                        $vacancyResult = mysqli_query($conn, $vacancySql);
+
+                        if (mysqli_num_rows($vacancyResult) > 0) {
+                            $row = mysqli_fetch_assoc($vacancyResult);
+
+                            $maxOccupancy = $row['TotalAvailableSpaces'] ?? 0;
+
+                            $vacancies = $maxOccupancy - $tenants;
+
+                            $vacancies = $vacancies < 0 ? 0 : $vacancies;
+                        }
+
+                        $estStatusBgColor = "grey";
+                        $estStatusTextColor = "black";
+
+                        switch ($estStatus) {
+                            case 'available':
+
+                                $estStatus = "Available";
+                                $estStatusBgColor = "#00552b";
+                                $estStatusTextColor = "white";
+
+                                if ($vacancies <= 0) {
+                                    $estStatus = "Fully occupied";
+                                    $estStatusBgColor = "maroon";
+                                    $estStatusTextColor = "white";
+                                }
+                                
+                                if ($noOfRooms <= 0) {
+                                    $estStatus = "No rooms";$estStatusBgColor = "maroon";
+                                    $estStatusTextColor = "white";
+                                }
+                                break;
+                            
+                            case 'unavailable':
+                                $estStatus = "Not available";$estStatusBgColor = "maroon";
+                                $estStatusTextColor = "white";
+                                break;
+
+                            default:
+                                $estStatus = 'Unknown status';
+                        }
+
+                        
+
+                        // Get number of bookings
+                        $noOfBookings = 0;
+                        $bookingSql = "SELECT COUNT(rs.ResidencyID) AS NoOfBookings FROM residency rs INNER JOIN rooms r ON rs.RoomID = r.RoomID WHERE r.EstablishmentID = $establishmentID";
+                        $bookingResult = mysqli_query($conn, $bookingSql);
+
+                        $noOfBookings = mysqli_fetch_assoc($bookingResult)['NoOfBookings'];
+                        
+                        // Assuming it's passed in the URL
+
+                        // Prepare the SQL query to fetch amenities
+                        $amenitySql = "SELECT GROUP_CONCAT(f.Name) AS Amenities 
+                                    FROM establishment e
+                                    INNER JOIN establishment_features ef ON ef.EstablishmentID = e.EstablishmentID
+                                    INNER JOIN features f ON f.FeatureID = ef.FeatureID 
+                                    WHERE ef.EstablishmentID = ? 
+                                    GROUP BY ef.EstablishmentID 
+                                    ORDER BY f.Name";
+
+                        // Prepare the statement
+                        $stmt = mysqli_prepare($conn, $amenitySql);
+
+                        // Bind the parameter (using 'i' for integer)
+                        mysqli_stmt_bind_param($stmt, "i", $establishmentID);
+
+                        // Execute the statement
+                        mysqli_stmt_execute($stmt);
+
+                        // Get the result
+                        $result = mysqli_stmt_get_result($stmt);
+
+                        // Fetch the amenities
+                        if ($row = mysqli_fetch_assoc($result)) {
+                            $amenities = $row['Amenities'];
+                        } else {
+                            $amenities = '';  // Handle case where no amenities are found
+                        }
+
+                        // echo $amenities;
+
                     ?>
-                    <div class="room-card">
+                    <div class="room-card" data-name="<?php echo $name; ?>"  data-gender="<?php echo $genderInclusiveness; ?>" data-price="<?php echo $price; ?>" data-reviews="<?php echo $totalReviews; ?>" data-vacancies="<?php echo $vacancies; ?>" data-status="<?php echo $estStatus; ?>" data-bookings="<?php echo $noOfBookings; ?>" data-score="<?php echo $averageScore; ?>" data-type="<?php echo $type; ?>" data-amenities="<?php echo $amenities; ?>">
                         <div class="room-card-image">
                             <img src="<?php echo $featuredPhoto; ?>" alt="<?php echo $photoDescription; ?>" />
                             <div class="room-card-icons">
-                                <span title="Add to favorites"><i class="fa-solid fa-heart"></i></span>
-                                <span title="View Map" onclick="redirect('#')"><i class="fa-solid fa-location-pin"></i></span>
+                                <!-- <span title="Add to favorites"><i class="fa-solid fa-heart"></i></span> -->
+                                <span title="View Map" onclick="redirect('/bookingapp/establishment/establishment.php?est=<?php echo $encryptedEstID; ?>#map-preview')"><i class="fa-solid fa-location-pin"></i></span>
                                 <div class="card-dropdown">
                                     <span title="Show Options"><i class="fa-solid fa-caret-down"></i></span>
                                     <div class="card-dropdown-menu">
-                                        <a href="establishment.php?est=<?php echo $encryptedEstID; ?>#availability">Check-in</a>
+                                        <a href="/bookingapp/establishment/establishment.php?est=<?php echo $encryptedEstID; ?>#availability">Check-in</a>
                                     </div>
                                 </div>
                             </div>
@@ -593,25 +633,36 @@ function generateStars($rating) {
                             </div>
                         </div>
                         <div class="room-card-details clearfix">
+                            <span class="room-availability" style="font-size: 14px; color: <?php echo $estStatusTextColor; ?>; background-color: <?php echo $estStatusBgColor; ?>; padding: 5px; border-radius: 5px; float: right;">
+                                <?php echo $estStatus; ?>
+                            </span>
                             <h4><?php echo $name; ?></h4>
+                            <p>
+                                <span><i class="fa-solid fa-location-pin"></i> <?php echo isset($address) ? $address : 'No address yet!'; ?></span>
+                            </p>
                             <p>
                                 <span><i class="fa-solid fa-building"></i> <?php echo $type; ?></span><br>
                                 <?php echo generateStars($starRating); ?>
                             </p>
                             <p>
-                                <span><i class="fa-solid fa-location-pin"></i> <?php echo $location; ?></span><br>
+                                <!-- <span><i class="fa-solid fa-location-pin"></i> <?php echo $location; ?></span><br> -->
                                 <span><i class="fa-solid fa-venus-mars"></i> <?php echo $genderInclusiveness; ?></span> &middot;
-                                <span><i class="fa-solid fa-door-open"></i> <?php echo "$noOfRooms room(s)"; ?></span>
+                                <span><i class="fa-solid fa-door-open"></i> <?php echo "$noOfRooms rooms"; ?></span>
+                                &middot;
+                                <?php
+                                echo "$tenants tenants &middot; $vacancies vacancies";
+
+                                ?>
                                 
                                 <?php
                                 
-                                $amenitySql = "SELECT f.Icon, f.Name, f.FeatureID FROM establishment_features rf INNER JOIN features f ON f.FeatureID = rf.FeatureID WHERE rf.EstablishmentID = $establishmentID";
+                                $amenitySql = "SELECT f.Icon, f.Name, f.FeatureID FROM establishment_features rf INNER JOIN features f ON f.FeatureID = rf.FeatureID WHERE rf.EstablishmentID = $establishmentID ORDER BY f.Name LIMIT 10";
                                 $amenityResult = mysqli_query($conn, $amenitySql);
 
                                 if (mysqli_num_rows($amenityResult) > 0) { ?>
                                 
                                 <h6>Amenities</h6>
-                                <p>
+                                <p class="amenities">
                                     <?php
                                         while ($amenity = mysqli_fetch_assoc($amenityResult)) {
                                     ?>
@@ -697,6 +748,7 @@ function generateStars($rating) {
 
         priceInput.oninput = function() {
             formatPriceCurrency(priceInput.value)
+            filterRooms();
         }
         
         function formatPriceCurrency(price) {
@@ -771,7 +823,7 @@ function generateStars($rating) {
         window.addEventListener('load', function() {
             function updateStatus() {
                 if (!navigator.onLine) {
-                    window.location.href = "/bookingapp/no_internet_connection.php";
+                    // window.location.href = "/bookingapp/no_internet_connection.php";
                 }
             }
 
@@ -803,15 +855,104 @@ function generateStars($rating) {
                 toast.remove();
             }, 5000);
         }
-        
-        <?php if ($rowCount > 0) { ?>
-            const sortSelect = document.getElementById('sort-select');
 
-            sortSelect.addEventListener('change', (e) => {
-                const selectedValue = e.target.value;
-                window.location.href = `${window.location.pathname}?order-type=${selectedValue}`;
+        function searchEstablishments() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const establishments = document.querySelectorAll(".room-card");
+
+            establishments.forEach(establishment => {
+                const name = establishment.dataset.name.toLowerCase();
+                establishment.style.display = name.includes(searchTerm) ? '' : 'none';
+            })
+        }
+
+        function sortEstablishments() {
+            const sortBy = document.getElementById('sort-select').value;
+            const establishments = Array.from(document.querySelectorAll('.room-card'));
+            const estContainer = document.getElementById("establishments");
+
+            establishments.sort((a, b) => {
+                let valueA, valueB;
+
+                if (sortBy === 'alphabetical') {
+                    valueA = a.dataset.name.toLowerCase();
+                    valueB = b.dataset.name.toLowerCase();
+                    return valueA.localeCompare(valueB); // String comparison
+                } else if (sortBy === 'cheapest' || sortBy === 'highest_price') {
+                    valueA = parseFloat(a.dataset.price);
+                    valueB = parseFloat(b.dataset.price);
+                    return sortBy === 'cheapest' ? valueA - valueB : valueB - valueA;
+                } else if (sortBy === 'most_popular') {
+                    valueA = parseInt(a.dataset.reviews, 10);
+                    valueB = parseInt(b.dataset.reviews, 10);
+                    return valueB - valueA;
+                } else if (sortBy === 'top_rated') {
+                    valueA = parseFloat(a.dataset.score);
+                    valueB = parseFloat(b.dataset.score);
+                    return valueB - valueA;
+                } else if (sortBy === 'most_booked') {
+                    valueA = parseInt(a.dataset.bookings, 10);
+                    valueB = parseInt(b.dataset.bookings, 10);
+                    return valueB - valueA;
+                } else if (sortBy === 'most_vacant') {
+                    valueA = parseInt(a.dataset.vacancies, 10);
+                    valueB = parseInt(b.dataset.vacancies, 10);
+                    return valueB - valueA;
+                }
             });
-        <?php } ?>
+
+            estContainer.innerHTML = ''; // Clear existing content
+            establishments.forEach(establishment => estContainer.appendChild(establishment)); // Append sorted elements
+        }
+
+
+        function filterRooms() {
+            // Get filter values
+            const filters = {
+                establishment: getCheckedValue('establishmentType'),
+                gender: getCheckedValue('genderType'),
+                amenities: getCheckedAmenities(),
+                maxPrice: getPriceRange()
+            };
+
+            // Apply filters to room cards
+            document.querySelectorAll('.room-card').forEach(room => {
+                const roomData = {
+                gender: room.dataset.gender,
+                amenities: room.dataset.amenities.split(','),
+                price: parseInt(room.dataset.price, 10)
+                };
+
+                const matchesFilter = matchesRoomFilter(roomData, filters);
+                room.classList.toggle('visible', matchesFilter);
+            });
+        }
+
+            // Helper functions
+
+            function getCheckedValue(name) {
+                return document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+            }
+
+            function getCheckedAmenities() {
+                return Array.from(document.querySelectorAll('input[name="amenities"]:checked')).map(cb => cb.value);
+            }
+
+            function getPriceRange() {
+                return document.querySelector('#check-price-range').checked
+                ? parseInt(document.querySelector('#priceRangeInput').value, 10)
+                : Infinity;
+            }
+
+            function matchesRoomFilter(room, filters) {
+                return (
+                    (filters.establishment ? room.gender === filters.establishment : true) &&
+                    (filters.gender ? room.gender === filters.gender : true) &&
+                    filters.amenities.every(amenity => room.amenities.includes(amenity)) &&
+                    room.price <= filters.maxPrice
+                );
+            }
 
     </script>
 

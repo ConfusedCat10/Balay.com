@@ -1,5 +1,5 @@
 <div class="modal" id="establishmentPhotosModal">
-    <div class="modal-content" style="height: auto; margin: auto">
+    <div class="modal-content" style="height: 100%; margin: auto; overflow: scroll">
         <span class="close" onclick="closeModal('establishmentPhotosModal')">&times;</span>
         <h1>Manage establishment photos</h1>
         <?php
@@ -31,6 +31,8 @@
                         <h3><?php echo ($key + 1); ?></h3>
                         <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($descriptions[$key]); ?>" style="width: 250px; height: 100px; object-fit: cover; border: 1px solid black" id="photo-preview-<?php echo ($key + 1); ?>">
                         <input type="text" name="photo-description-<?php echo ($key + 1); ?>" id="photo-description-<?php echo ($key + 1); ?>" placeholder="Enter description" value="<?php echo htmlspecialchars($descriptions[$key]); ?>">
+
+                        <!-- <label for="file">Upload photo</label> -->
                         <input type="file" name="photo<?php echo ($key + 1); ?>" id="photo-input-<?php echo ($key + 1); ?>" onchange="displayPhotoPreview('photo-input-<?php echo ($key + 1); ?>', 'photo-preview-<?php echo ($key + 1); ?>')">
                         <?php
                         if ($key === 0) {
@@ -38,7 +40,7 @@
                         }
                         ?>
                         <button type="submit" id="upload-photo-btn-<?php echo ($key + 1); ?>" name="upload-est-photo" onclick="uploadPhoto(<?php echo ($key + 1); ?>)"><i class="fa-solid fa-upload"></i> Upload photo</button>
-                        <button type="submit" style="background-color: grey" id="upload-photo-btn-<?php echo ($key + 1); ?>" name="delete-est-photo" onclick="deletePhoto(<?php echo ($key + 1); ?>)"><i class="fa-solid fa-trash"></i> Delete photo</button>
+                        <button type="button" style="background-color: grey" id="upload-photo-btn-<?php echo ($key + 1); ?>" name="delete-est-photo" onclick="confirmPhotoDeletion(<?php echo ($key + 1); ?>)"><i class="fa-solid fa-trash"></i> Delete photo</button>
                     </div>
                 <?php } ?>
             </div>

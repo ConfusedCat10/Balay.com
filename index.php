@@ -184,10 +184,10 @@ session_start();
     <header class="header">
         <?php include "php/header.php"; ?>
         <div class="section-container header-container" id="home">
-            <a href="index.php"><img src="/bookingapp/assets/site-logo/logo-text-white.png" style="width: 300px;" alt="Balay.com logo"></a>
+            <a href="index.php"><img src="/bookingapp/assets/site-logo/logo-text-white.png" style="width: 400px;" alt="Balay.com logo"></a>
             <h1>Your Premier Online Accommodation System
                 in <span>Mindanao State University</span>.
-            </h1>
+            </h1>   
 
           
     <!-- End of search section -->

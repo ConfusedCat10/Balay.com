@@ -1,13 +1,13 @@
 <div class="modal" id="addRoomAmenity" >
-        <div class="modal-content" style="overflow: auto">
-            <span class="close" onclick="closeModal('addRoomAmenity'); window.location.reload();">&times;</span>
+        <div class="modal-content" style="overflow: scroll; height: 80%">
+            <span class="close" onclick="closeModal('addRoomAmenity'); window.location.reload();">&times; Close and Save</span>
             <h1>Add a room amenity by clicking a chip</h1>
             <form method="post">
 
             <input type="hidden" name="roomID" id="amenityRoomID">
             
             <?php
-            $sql = "SELECT * FROM features ORDER BY Name";
+            $sql = "SELECT * FROM features WHERE Category IN ('building', 'both') ORDER BY Name";
             $result = mysqli_query($conn, $sql);
 
 

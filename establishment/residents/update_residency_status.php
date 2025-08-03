@@ -9,6 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stat = $data['stat']; // Get the ID from the data
     $tab = $data['tab'];
 
+    $remark = $data['rmrk'];
+
     // $status = 'cancelled';
 
     // echo "Stat: $stat"; 
@@ -46,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         // Use a prepared statement to safely query the database with the ID
         $sql = $stat === 'residency ended' ? 
-            "UPDATE residency SET Status = ?, DateOfExit = CURDATE() WHERE ResidencyID = ?" : 
-            "UPDATE residency SET Status = ?, DateOfExit = NULL WHERE ResidencyID = ?";
+            "UPDATE residency SET Status = ?, Remark = ?, DateOfExit = CURDATE() WHERE ResidencyID = ?" : 
+            "UPDATE residency SET Status = ?, Remark = ?, DateOfExit = NULL WHERE ResidencyID = ?";
 
         $stmt = mysqli_prepare($conn, $sql);
 
@@ -55,14 +57,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             throw new Exception(mysqli_error($conn));
         }
 
-        mysqli_stmt_bind_param($stmt, 'si', $stat, $residencyID);
+        mysqli_stmt_bind_param($stmt, 'ssi', $stat, $remark, $residencyID);
 
         if (!mysqli_stmt_execute($stmt)) {
             throw new Exception(mysqli_stmt_error($stmt));
         }
 
         $st = str_replace(' ', '+', $status);
-        // header("Location: index.php?res_st=$st");
+        header("Location: index.php?res_st=$st");
     } catch (Exception $e) {
         echo json_encode($e->getMessage());
     }

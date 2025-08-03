@@ -40,10 +40,22 @@ if (isset($_POST['submit-add-room'])) {
             $maxOccupant = 3;
             break;
         
-        case "Quad apartment":
+        case "Quad occupancy":
         case "Studio apartment":
         case "Luxury suite":
             $maxOccupant = 4;
+            break;
+
+        case "Five-person occupancy":
+            $maxOccupant = 5;
+            break;
+
+        case "Six-person occupancy":
+            $maxOccupant = 6;
+            break;
+        
+        case "Ten-person occupancy":
+            $maxOccupant = 10;
             break;
         
         default:

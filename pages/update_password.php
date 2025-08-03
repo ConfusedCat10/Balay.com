@@ -273,9 +273,9 @@ if (isset($_POST['recover-password'])) {
                         <h2>Choose How to Recover Your Account</h2>
                         <input type="hidden" name="username" value="<?php echo $username; ?>">
 
-                        <input type="password" name="newPassword" id="newPassword" placeholder="Enter a new password." style="" required>
+                        <input type="password" name="newPassword" id="newPassword" placeholder="Enter a new password." value="<?php echo isset($_POST['newPassword']) ? $_POST['newPassword'] : ''; ?>" required>
 
-                        <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm your password" required>
+                        <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm your password" value="<?php echo isset($_POST['confirmPassword']) ? $_POST['confirmPassword'] : ''; ?>" required>
 
                         <span class="toggle-password" id="togglePassword" onclick="togglePassword()">
                             <i id="toggleIcon" title="Click to show the passwords." class="fas fa-eye slash"></i> Toggle password
